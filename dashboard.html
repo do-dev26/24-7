@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — SaleIQ</title>
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <style>
+    body { display: flex; }
+
+    .dash-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .section-content { padding: 28px 32px; display: none; }
+    .section-content.active { display: block; }
+
+    /* Stat grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    @media(max-width:1000px){ .stats-grid { grid-template-columns: 1fr 1fr; } }
+
+    /* Lead status colors */
+    .status-new { background: rgba(108,99,255,0.12); color: var(--accent); }
+    .status-contacted { background: rgba(255,179,71,0.12); color: var(--warning); }
+    .status-converted { background: rgba(67,232,192,0.12); color: var(--success); }
+
+    /* Widget preview */
+    .widget-preview {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px;
+      max-height: 400px; overflow-y: auto;
+    }
+    .code-block {
+      background: #0d0d14; border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px; font-family: 'Courier New', monospace;
+      font-size: 13px; color: #a8d8a8; line-height: 1.6; overflow-x: auto;
+    }
+    .color-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    @media(max-width:768px){
+      .dash-header { padding: 20px 20px 16px; }
+      .section-content { padding: 20px; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body class="noise-bg">
+
+<div id="sidebar"></div>
+
+<main class="dash-main">
+
+  <!-- ── OVERVIEW ──────────────────────────────── -->
+  <div id="sec-overview" class="section-content active">
+    <div class="dash-header">
+      <div>
+        <h2 style="font-size:22px;letter-spacing:-0.01em;" id="welcome-text">Good morning 👋</h2>
+        <p style="font-size:14px;color:var(--muted);margin-top:4px;">Here's what's happening with your AI agent today.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="badge badge-success">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--success);"></span>
+          Agent Online
+        </span>
+        <button onclick="switchSection('leads')" class="btn-primary" style="padding:9px 18px;font-size:13px;">View Leads</button>
+      </div>
+    </div>
+
+    <div style="padding:28px 32px;">
+
+      <!-- Stats -->
+      <div class="stats-grid">
+        <div class="stat-card animate-in">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Total Leads</p>
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(108,99,255,0.12);display:flex;align-items:center;justify-content:center;">
+              <svg width="15" height="15" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+          </div>
+          <p style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:4px;" id="stat-leads">48</p>
+          <p style="font-size:12px;color:var(--success);">↑ +12 this week</p>
+        </div>
+
+        <div class="stat-card animate-in animate-delay-1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Conversion Rate</p>
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(67,232,192,0.1);display:flex;align-items:center;justify-content:center;">
+              <svg width="15" height="15" fill="none" stroke="var(--success)" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </div>
+          </div>
+          <p style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:4px;">32%</p>
+          <p style="font-size:12px;color:var(--success);">↑ +4% vs last month</p>
+        </div>
+
+        <div class="stat-card animate-in animate-delay-2">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Words Used</p>
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,179,71,0.1);display:flex;align-items:center;justify-content:center;">
+              <svg width="15" height="15" fill="none" stroke="var(--warning)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+          </div>
+          <p style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;margin-bottom:4px;" id="stat-words">3,420</p>
+          <div class="progress-bar" style="margin-top:8px;">
+            <div class="progress-fill" id="words-bar" style="width:34%;background:linear-gradient(90deg,var(--accent),var(--warning));"></div>
+          </div>
+          <p style="font-size:11px;color:var(--muted);margin-top:5px;" id="words-label">3,420 / 10,000 used</p>
+        </div>
+
+        <div class="stat-card animate-in animate-delay-3">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Plan Expiry</p>
+            <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,101,132,0.1);display:flex;align-items:center;justify-content:center;">
+              <svg width="15" height="15" fill="none" stroke="var(--accent2)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+          </div>
+          <p style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;margin-bottom:4px;" id="stat-expiry">18 days</p>
+          <button onclick="switchSection('billing')" style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;">Renew plan →</button>
+        </div>
+      </div>
+
+      <!-- Recent leads + Quick actions -->
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <h3 style="font-size:15px;font-weight:600;">Recent Leads</h3>
+            <button onclick="switchSection('leads')" style="font-size:13px;color:var(--accent);background:none;border:none;cursor:pointer;">View all →</button>
+          </div>
+          <table class="data-table">
+            <thead><tr>
+              <th>Name</th><th>Email</th><th>Status</th><th>Date</th>
+            </tr></thead>
+            <tbody id="recent-leads-table"></tbody>
+          </table>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Quick Actions</h3>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button onclick="switchSection('widget')" style="background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.2);border-radius:9px;padding:11px 14px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;" onmouseover="this.style.background='rgba(108,99,255,0.15)'" onmouseout="this.style.background='rgba(108,99,255,0.08)'">
+                <span style="font-size:16px;">⚙️</span>
+                <span style="font-size:13px;font-weight:500;color:var(--text);">Configure Widget</span>
+              </button>
+              <button onclick="switchSection('leads')" style="background:rgba(67,232,192,0.05);border:1px solid rgba(67,232,192,0.15);border-radius:9px;padding:11px 14px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;" onmouseover="this.style.background='rgba(67,232,192,0.1)'" onmouseout="this.style.background='rgba(67,232,192,0.05)'">
+                <span style="font-size:16px;">👥</span>
+                <span style="font-size:13px;font-weight:500;color:var(--text);">Manage Leads</span>
+              </button>
+              <button onclick="switchSection('followups')" style="background:rgba(255,179,71,0.05);border:1px solid rgba(255,179,71,0.15);border-radius:9px;padding:11px 14px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,179,71,0.1)'" onmouseout="this.style.background='rgba(255,179,71,0.05)'">
+                <span style="font-size:16px;">🔔</span>
+                <span style="font-size:13px;font-weight:500;color:var(--text);">Follow-Ups</span>
+              </button>
+              <button onclick="switchSection('billing')" style="background:rgba(255,101,132,0.05);border:1px solid rgba(255,101,132,0.15);border-radius:9px;padding:11px 14px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;" onmouseover="this.style.background='rgba(255,101,132,0.1)'" onmouseout="this.style.background='rgba(255,101,132,0.05)'">
+                <span style="font-size:16px;">💳</span>
+                <span style="font-size:13px;font-weight:500;color:var(--text);">Upgrade Plan</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="card" style="background:linear-gradient(135deg,rgba(108,99,255,0.12),rgba(67,232,192,0.06));border-color:rgba(108,99,255,0.25);">
+            <p style="font-size:13px;font-weight:600;margin-bottom:6px;">🚀 Pro Tip</p>
+            <p style="font-size:13px;color:var(--muted);line-height:1.6;">Set a follow-up reminder within 2 hours for new leads. Conversion rates increase by 60% with fast response times.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LEADS ──────────────────────────────────── -->
+  <div id="sec-leads" class="section-content">
+    <div class="dash-header">
+      <div>
+        <h2 style="font-size:22px;letter-spacing:-0.01em;">Lead Management</h2>
+        <p style="font-size:14px;color:var(--muted);margin-top:4px;">All captured leads from your AI agent</p>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="exportLeads()" class="btn-secondary" style="padding:9px 18px;font-size:13px;">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <button onclick="openAddLeadModal()" class="btn-primary" style="padding:9px 18px;font-size:13px;">+ Add Lead</button>
+      </div>
+    </div>
+
+    <div style="padding:24px 32px;">
+      <!-- Filters -->
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <input type="text" id="lead-search" placeholder="Search leads..." class="form-input" style="max-width:280px;padding:10px 14px;" oninput="filterLeads()">
+        <select id="status-filter" class="form-input" style="max-width:160px;padding:10px 14px;" onchange="filterLeads()">
+          <option value="">All Status</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="converted">Converted</option>
+        </select>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="data-table">
+          <thead><tr>
+            <th>Name</th><th>Email</th><th>Phone</th><th>Message</th><th>Status</th><th>Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="leads-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOLLOW-UPS ─────────────────────────────── -->
+  <div id="sec-followups" class="section-content">
+    <div class="dash-header">
+      <div>
+        <h2 style="font-size:22px;letter-spacing:-0.01em;">Follow-Up System</h2>
+        <p style="font-size:14px;color:var(--muted);margin-top:4px;">Track and manage your lead follow-ups</p>
+      </div>
+      <button onclick="openAddFollowupModal()" class="btn-primary" style="padding:9px 18px;font-size:13px;">+ Add Reminder</button>
+    </div>
+
+    <div style="padding:24px 32px;">
+      <!-- Summary cards -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;">
+        <div class="card" style="text-align:center;">
+          <p style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--danger);" id="fu-overdue">2</p>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px;">Overdue</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <p style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--warning);" id="fu-today">5</p>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px;">Due Today</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <p style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--success);" id="fu-done">18</p>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px;">Completed</p>
+        </div>
+      </div>
+
+      <div id="followups-list"></div>
+    </div>
+  </div>
+
+  <!-- ── WIDGET SETTINGS ────────────────────────── -->
+  <div id="sec-widget" class="section-content">
+    <div class="dash-header">
+      <div>
+        <h2 style="font-size:22px;letter-spacing:-0.01em;">Widget Settings</h2>
+        <p style="font-size:14px;color:var(--muted);margin-top:4px;">Customize your AI sales agent</p>
+      </div>
+      <button onclick="saveWidgetSettings()" class="btn-primary" style="padding:9px 18px;font-size:13px;">Save Changes</button>
+    </div>
+
+    <div style="padding:24px 32px;display:grid;grid-template-columns:1fr 360px;gap:24px;">
+      <!-- Settings panel -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Agent Identity</h3>
+          <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="form-group">
+              <label class="form-label">Agent Name</label>
+              <input type="text" id="agent-name" class="form-input" value="Alex" placeholder="e.g. Alex, Aria, Max">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Greeting Message</label>
+              <textarea id="agent-greeting" class="form-input" rows="3" style="resize:vertical;">👋 Hi! I'm Alex, your AI sales assistant. How can I help you today?</textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Agent Personality</label>
+              <select id="agent-personality" class="form-input">
+                <option value="professional">Professional & Formal</option>
+                <option value="friendly" selected>Friendly & Casual</option>
+                <option value="concise">Direct & Concise</option>
+                <option value="enthusiastic">Enthusiastic & Energetic</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Colors & Branding</h3>
+          <div style="margin-bottom:16px;">
+            <p class="form-label" style="margin-bottom:10px;">Primary Color</p>
+            <div class="color-grid" id="color-grid">
+              <div class="color-swatch active" style="background:#6c63ff;" onclick="selectColor('#6c63ff',this)" title="#6c63ff"></div>
+              <div class="color-swatch" style="background:#43e8c0;" onclick="selectColor('#43e8c0',this)"></div>
+              <div class="color-swatch" style="background:#ff6584;" onclick="selectColor('#ff6584',this)"></div>
+              <div class="color-swatch" style="background:#ffb347;" onclick="selectColor('#ffb347',this)"></div>
+              <div class="color-swatch" style="background:#4facfe;" onclick="selectColor('#4facfe',this)"></div>
+              <div class="color-swatch" style="background:#f093fb;" onclick="selectColor('#f093fb',this)"></div>
+              <div class="color-swatch" style="background:#ff6b6b;" onclick="selectColor('#ff6b6b',this)"></div>
+              <div class="color-swatch" style="background:#38ef7d;" onclick="selectColor('#38ef7d',this)"></div>
+              <input type="color" id="custom-color" value="#6c63ff" onchange="selectColor(this.value,null)" style="width:32px;height:32px;border-radius:8px;border:2px solid var(--border);cursor:pointer;background:none;">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:14px;">Show SaleIQ branding</p>
+            <label class="toggle">
+              <input type="checkbox" id="show-branding" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:14px;font-weight:600;margin-bottom:16px;">Embed Code</h3>
+          <p style="font-size:13px;color:var(--muted);margin-bottom:12px;">Paste this script tag before the closing <code style="background:var(--surface2);padding:2px 6px;border-radius:4px;">&lt;/body&gt;</code> tag on your website.</p>
+          <div class="code-block" id="embed-code">
+&lt;script
+  src="https://cdn.saleiq.app/widget.js"
+  data-key="sk_demo_abc123"
+  data-agent="Alex"
+  data-color="#6c63ff"
+  data-greeting="Hi! I'm Alex, your AI assistant."
+&gt;&lt;/script&gt;
+          </div>
+          <button onclick="copyEmbedCode()" class="btn-secondary" style="margin-top:12px;padding:9px 18px;font-size:13px;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy Code
+          </button>
+        </div>
+      </div>
+
+      <!-- Live preview -->
+      <div>
+        <p style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.06em;">Live Preview</p>
+        <div class="widget-preview">
+          <div id="widget-preview-inner">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+              <div id="prev-avatar" style="width:36px;height:36px;border-radius:50%;background:#6c63ff;display:flex;align-items:center;justify-content:center;font-size:16px;">🤖</div>
+              <div>
+                <p id="prev-name" style="font-size:13px;font-weight:600;">Alex</p>
+                <div style="display:flex;align-items:center;gap:4px;">
+                  <div style="width:6px;height:6px;border-radius:50%;background:var(--success);"></div>
+                  <p style="font-size:11px;color:var(--muted);">Online</p>
+                </div>
+              </div>
+            </div>
+            <div id="prev-greeting" style="background:rgba(108,99,255,0.12);border:1px solid rgba(108,99,255,0.2);border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.6;margin-bottom:12px;">
+              👋 Hi! I'm Alex, your AI sales assistant. How can I help you today?
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" placeholder="Type a message..." style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-size:12px;color:var(--text);outline:none;">
+              <button id="prev-btn" style="background:#6c63ff;border:none;border-radius:8px;padding:9px 12px;cursor:pointer;">
+                <svg width="13" height="13" fill="white" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BILLING ─────────────────────────────────── -->
+  <div id="sec-billing" class="section-content">
+    <div class="dash-header">
+      <div>
+        <h2 style="font-size:22px;letter-spacing:-0.01em;">Billing & Plan</h2>
+        <p style="font-size:14px;color:var(--muted);margin-top:4px;">Manage your subscription and payment</p>
+      </div>
+    </div>
+
+    <div style="padding:24px 32px;display:flex;flex-direction:column;gap:20px;max-width:700px;">
+
+      <!-- Current plan -->
+      <div class="card" style="border-color:var(--accent);position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent3));"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+              <h3 style="font-size:18px;" id="billing-plan-name">Pro Plan</h3>
+              <span class="badge badge-accent">Active</span>
+            </div>
+            <p style="font-size:13px;color:var(--muted);">Renews on <span id="billing-expiry">May 19, 2025</span> · <span id="billing-price">$79/month</span></p>
+          </div>
+          <a href="pricing.html" class="btn-secondary" style="padding:9px 18px;font-size:13px;">Change Plan</a>
+        </div>
+
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <p style="font-size:13px;color:var(--muted);">Words used this month</p>
+            <p style="font-size:13px;font-weight:600;" id="bill-words">3,420 / 10,000</p>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="bill-bar" style="width:34%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade nudge -->
+      <div style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(67,232,192,0.05));border:1px solid rgba(108,99,255,0.2);border-radius:14px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+          <p style="font-weight:600;font-size:15px;margin-bottom:4px;">💡 Need more words?</p>
+          <p style="font-size:13px;color:var(--muted);">Upgrade to get 10,000+ words, unlimited widgets, and priority support.</p>
+        </div>
+        <a href="pricing.html" class="btn-primary" style="padding:10px 22px;font-size:13px;white-space:nowrap;">Upgrade Now</a>
+      </div>
+
+      <!-- Payment method -->
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Payment Method</h3>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;">VISA</div>
+            <div>
+              <p style="font-size:14px;font-weight:500;">•••• •••• •••• 4242</p>
+              <p style="font-size:12px;color:var(--muted);">Expires 09/27</p>
+            </div>
+          </div>
+          <button onclick="showToast('Payment update coming soon','info')" class="btn-secondary" style="padding:8px 16px;font-size:13px;">Update</button>
+        </div>
+      </div>
+
+      <!-- Invoice history -->
+      <div class="card">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:16px;">Invoice History</h3>
+        <table class="data-table">
+          <thead><tr><th>Date</th><th>Amount</th><th>Plan</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <tr>
+              <td>Apr 1, 2025</td>
+              <td style="font-weight:600;">$79.00</td>
+              <td>Pro</td>
+              <td><span class="badge badge-success" style="font-size:11px;">Paid</span></td>
+              <td><button style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;">Download</button></td>
+            </tr>
+            <tr>
+              <td>Mar 1, 2025</td>
+              <td style="font-weight:600;">$79.00</td>
+              <td>Pro</td>
+              <td><span class="badge badge-success" style="font-size:11px;">Paid</span></td>
+              <td><button style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;">Download</button></td>
+            </tr>
+            <tr>
+              <td>Feb 1, 2025</td>
+              <td style="font-weight:600;">$49.00</td>
+              <td>Basic</td>
+              <td><span class="badge badge-success" style="font-size:11px;">Paid</span></td>
+              <td><button style="font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;">Download</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Cancel -->
+      <div class="card" style="border-color:rgba(255,107,107,0.2);">
+        <h3 style="font-size:15px;font-weight:600;margin-bottom:6px;color:var(--danger);">Cancel Subscription</h3>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">Your subscription will remain active until the end of your current billing period. You can resubscribe anytime.</p>
+        <button onclick="showToast('Please contact support to cancel','info')" class="btn-danger" style="padding:9px 20px;font-size:13px;">Cancel Plan</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Add Lead Modal -->
+<div class="modal-overlay" id="add-lead-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h3 style="font-size:18px;">Add New Lead</h3>
+      <button onclick="closeModal('add-lead-modal')" style="background:none;border:none;cursor:pointer;color:var(--muted);">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form onsubmit="addLead(event)">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group"><label class="form-label">Name *</label><input type="text" id="new-name" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">Email *</label><input type="email" id="new-email" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">Phone</label><input type="tel" id="new-phone" class="form-input" placeholder="+1 234 567 8900"></div>
+        <div class="form-group"><label class="form-label">Message / Notes</label><textarea id="new-message" class="form-input" rows="2" placeholder="What are they interested in?"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="button" onclick="closeModal('add-lead-modal')" class="btn-secondary" style="flex:1;justify-content:center;">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;justify-content:center;">Add Lead</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Add Followup Modal -->
+<div class="modal-overlay" id="add-followup-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h3 style="font-size:18px;">Add Follow-Up Reminder</h3>
+      <button onclick="closeModal('add-followup-modal')" style="background:none;border:none;cursor:pointer;color:var(--muted);">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form onsubmit="addFollowup(event)">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="form-group"><label class="form-label">Lead Name</label><input type="text" id="fu-name" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">Reminder Date</label><input type="date" id="fu-date" class="form-input" required></div>
+        <div class="form-group"><label class="form-label">Notes</label><textarea id="fu-notes" class="form-input" rows="2" placeholder="What's the context?"></textarea></div>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <button type="button" onclick="closeModal('add-followup-modal')" class="btn-secondary" style="flex:1;justify-content:center;">Cancel</button>
+          <button type="submit" class="btn-primary" style="flex:1;justify-content:center;">Add Reminder</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script>
+// ============================================================
+// AUTH.JS — Firebase Auth Flow (localStorage-based simulation)
+// Replace localStorage calls with actual Firebase SDK calls
+// ============================================================
+
+// ── Toast Notification ─────────────────────────────────────
+function showToast(message, type = 'success') {
+  let container = document.querySelector('.toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const colors = {
+    success: 'var(--success)',
+    error: 'var(--danger)',
+    info: 'var(--accent)',
+    warning: 'var(--warning)'
+  };
+  const icons = {
+    success: '✓',
+    error: '✕',
+    info: 'ℹ',
+    warning: '⚠'
+  };
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `
+    <span style="color:${colors[type]};font-weight:700;font-size:16px;">${icons[type]}</span>
+    <span style="color:var(--text);font-size:14px;">${message}</span>
+  `;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'fadeInUp 0.3s ease reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ── Auth Guard ──────────────────────────────────────────────
+function requireAuth() {
+  const user = localStorage.getItem('saleiq_user');
+  if (!user) {
+    window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+    return false;
+  }
+  return JSON.parse(user);
+}
+
+function redirectIfLoggedIn() {
+  const user = localStorage.getItem('saleiq_user');
+  if (user) {
+    window.location.href = 'dashboard.html';
+  }
+}
+
+// ── Sign Up ─────────────────────────────────────────────────
+function handleSignUp(e) {
+  e.preventDefault();
+
+  const name = document.getElementById('name')?.value.trim();
+  const email = document.getElementById('email')?.value.trim();
+  const password = document.getElementById('password')?.value;
+  const confirm = document.getElementById('confirm-password')?.value;
+
+  if (!name || !email || !password) {
+    return showToast('Please fill in all fields.', 'error');
+  }
+  if (password.length < 8) {
+    return showToast('Password must be at least 8 characters.', 'error');
+  }
+  if (password !== confirm) {
+    return showToast('Passwords do not match.', 'error');
+  }
+
+  // Simulate Firebase: firebase.auth().createUserWithEmailAndPassword(email, password)
+  const userData = {
+    uid: 'uid_' + Date.now(),
+    name,
+    email,
+    plan: 'Basic',
+    wordsUsed: 0,
+    wordsLimit: 5000,
+    planExpiry: new Date(Date.now() + 30 * 86400000).toISOString(),
+    createdAt: new Date().toISOString()
+  };
+  localStorage.setItem('saleiq_user', JSON.stringify(userData));
+  showToast('Account created! Redirecting...', 'success');
+  setTimeout(() => window.location.href = 'dashboard.html', 1200);
+}
+
+// ── Log In ──────────────────────────────────────────────────
+function handleLogin(e) {
+  e.preventDefault();
+
+  const email = document.getElementById('email')?.value.trim();
+  const password = document.getElementById('password')?.value;
+
+  if (!email || !password) {
+    return showToast('Please enter your email and password.', 'error');
+  }
+
+  // Simulate Firebase: firebase.auth().signInWithEmailAndPassword(email, password)
+  // For demo: any email/password logs in
+  const userData = {
+    uid: 'uid_demo',
+    name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+    email,
+    plan: 'Pro',
+    wordsUsed: 3420,
+    wordsLimit: 10000,
+    planExpiry: new Date(Date.now() + 18 * 86400000).toISOString(),
+    createdAt: new Date().toISOString()
+  };
+  localStorage.setItem('saleiq_user', JSON.stringify(userData));
+
+  const params = new URLSearchParams(window.location.search);
+  const redirect = params.get('redirect') || 'dashboard.html';
+  showToast('Welcome back!', 'success');
+  setTimeout(() => window.location.href = redirect, 1000);
+}
+
+// ── Forgot Password ─────────────────────────────────────────
+function handleForgotPassword(e) {
+  e.preventDefault();
+  const email = document.getElementById('email')?.value.trim();
+  if (!email) return showToast('Please enter your email.', 'error');
+
+  // Simulate Firebase: firebase.auth().sendPasswordResetEmail(email)
+  showToast('Reset link sent to ' + email, 'success');
+  setTimeout(() => window.location.href = 'login.html', 2000);
+}
+
+// ── Password Visibility Toggle ──────────────────────────────
+function togglePassword(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+  } else {
+    input.type = 'password';
+    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  }
+}
+
+
+// ============================================================
+// SIDEBAR COMPONENT
+// ============================================================
+function renderSidebar(activeSection = 'overview') {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  const user = JSON.parse(localStorage.getItem('saleiq_user') || '{}');
+  const userName = user.name || 'User';
+  const userEmail = user.email || '';
+  const userPlan = user.plan || 'Basic';
+
+  const navItems = [
+    { id: 'overview', icon: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`, label: 'Overview' },
+    { id: 'leads', icon: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`, label: 'Leads' },
+    { id: 'followups', icon: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>`, label: 'Follow-Ups' },
+    { id: 'widget', icon: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`, label: 'Widget Settings' },
+    { id: 'billing', icon: `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`, label: 'Billing' },
+  ];
+
+  sidebar.innerHTML = `
+    <div class="sidebar">
+      <!-- Logo -->
+      <div style="padding:20px 16px 16px;border-bottom:1px solid var(--border);">
+        <a href="index.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+          <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--accent3));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:17px;">Sale<span style="color:var(--accent)">IQ</span></span>
+        </a>
+      </div>
+
+      <!-- Nav -->
+      <nav style="padding:12px 10px;flex:1;overflow-y:auto;">
+        <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);padding:4px 6px 10px;">Main Menu</p>
+        ${navItems.map(item => `
+          <button
+            class="sidebar-nav-item ${activeSection === item.id ? 'active' : ''}"
+            onclick="switchSection('${item.id}')"
+          >
+            ${item.icon}
+            ${item.label}
+          </button>
+        `).join('')}
+      </nav>
+
+      <!-- User card -->
+      <div style="padding:12px 10px;border-top:1px solid var(--border);">
+        <div style="background:var(--surface2);border-radius:10px;padding:12px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;flex-shrink:0;">
+              ${userName.charAt(0).toUpperCase()}
+            </div>
+            <div style="overflow:hidden;">
+              <p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${userName}</p>
+              <p style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${userEmail}</p>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span class="badge badge-accent" style="font-size:11px;">${userPlan} Plan</span>
+            <button onclick="handleLogout()" style="font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color 0.15s;" onmouseover="this.style.color='var(--danger)'" onmouseout="this.style.color='var(--muted)'">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile toggle -->
+    <button id="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')" style="
+      display:none;position:fixed;top:16px;left:16px;z-index:200;
+      background:var(--surface);border:1px solid var(--border);
+      border-radius:8px;padding:8px;cursor:pointer;
+    ">
+      <svg width="20" height="20" fill="none" stroke="var(--text)" stroke-width="2" viewBox="0 0 24 24">
+        <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  `;
+}
+
+function handleLogout() {
+  if (confirm('Are you sure you want to logout?')) {
+    localStorage.removeItem('saleiq_user');
+    window.location.href = 'login.html';
+  }
+}
+
+
+// ============================================================
+// DASHBOARD.JS — All dashboard logic
+// ============================================================
+
+// ── Sample Data ─────────────────────────────────────────────
+let leads = [
+  { id: 1, name: 'Priya Sharma', email: 'priya@techco.in', phone: '+91 98765 43210', message: 'Interested in Pro plan for our e-commerce site', status: 'converted', date: '2025-04-15' },
+  { id: 2, name: 'James Walker', email: 'j.walker@growth.io', phone: '+1 415 555 0132', message: 'Need AI agent for SaaS sales page', status: 'contacted', date: '2025-04-16' },
+  { id: 3, name: 'Fatima Al-Hassan', email: 'fatima@venturex.com', phone: '+971 50 123 4567', message: 'Evaluating for enterprise team', status: 'new', date: '2025-04-17' },
+  { id: 4, name: 'Carlos Mejia', email: 'cmejia@launchpad.mx', phone: '+52 55 1234 5678', message: 'Wants demo before deciding', status: 'new', date: '2025-04-17' },
+  { id: 5, name: 'Yuki Tanaka', email: 'yuki@bytegrowth.jp', phone: '+81 90 1234 5678', message: 'Basic plan for startup website', status: 'contacted', date: '2025-04-18' },
+  { id: 6, name: 'Sophie Müller', email: 's.muller@nextstep.de', phone: '+49 151 12345678', message: 'Looking for affordable option', status: 'converted', date: '2025-04-18' },
+];
+
+let followups = [
+  { id: 1, name: 'Fatima Al-Hassan', date: '2025-04-18', status: 'overdue', notes: 'Send enterprise pricing deck' },
+  { id: 2, name: 'Carlos Mejia', date: '2025-04-19', status: 'today', notes: 'Schedule product demo call' },
+  { id: 3, name: 'James Walker', date: '2025-04-19', status: 'today', notes: 'Follow up on Pro trial signup' },
+  { id: 4, name: 'Yuki Tanaka', date: '2025-04-20', status: 'upcoming', notes: 'Send case studies' },
+  { id: 5, name: 'Priya Sharma', date: '2025-04-10', status: 'done', notes: 'Onboarding complete ✅' },
+];
+
+let selectedColor = '#6c63ff';
+
+// ── Init ─────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const user = requireAuth();
+  if (!user) return;
+
+  renderSidebar('overview');
+  initOverview(user);
+  renderLeads();
+  renderFollowups();
+  updateEmbedCode();
+});
+
+// ── Section Switcher ─────────────────────────────────────────
+function switchSection(id) {
+  document.querySelectorAll('.section-content').forEach(el => el.classList.remove('active'));
+  const target = document.getElementById('sec-' + id);
+  if (target) target.classList.add('active');
+
+  // Update sidebar active state
+  document.querySelectorAll('.sidebar-nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(`'${id}'`));
+  });
+
+  // Close mobile sidebar
+  document.querySelector('.sidebar')?.classList.remove('open');
+}
+
+// ── Overview ─────────────────────────────────────────────────
+function initOverview(user) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const name = user.name?.split(' ')[0] || 'there';
+  const el = document.getElementById('welcome-text');
+  if (el) el.textContent = `${greeting}, ${name} 👋`;
+
+  // Words usage
+  const used = user.wordsUsed || 3420;
+  const limit = user.wordsLimit || 10000;
+  const pct = Math.round((used / limit) * 100);
+
+  const wBar = document.getElementById('words-bar');
+  const wLabel = document.getElementById('words-label');
+  const wStat = document.getElementById('stat-words');
+  if (wBar) wBar.style.width = pct + '%';
+  if (wLabel) wLabel.textContent = `${used.toLocaleString()} / ${limit.toLocaleString()} used`;
+  if (wStat) wStat.textContent = used.toLocaleString();
+
+  // Plan expiry
+  if (user.planExpiry) {
+    const days = Math.max(0, Math.floor((new Date(user.planExpiry) - Date.now()) / 86400000));
+    const expiryEl = document.getElementById('stat-expiry');
+    if (expiryEl) expiryEl.textContent = days + ' days';
+  }
+
+  // Billing
+  const bPlan = document.getElementById('billing-plan-name');
+  const bPrice = document.getElementById('billing-price');
+  const bWords = document.getElementById('bill-words');
+  const bBar = document.getElementById('bill-bar');
+  const bExpiry = document.getElementById('billing-expiry');
+  if (bPlan) bPlan.textContent = (user.plan || 'Pro') + ' Plan';
+  if (bPrice) bPrice.textContent = user.plan === 'Basic' ? '$49/month' : '$79/month';
+  if (bWords) bWords.textContent = `${(used).toLocaleString()} / ${limit.toLocaleString()}`;
+  if (bBar) bBar.style.width = pct + '%';
+  if (bExpiry && user.planExpiry) {
+    bExpiry.textContent = new Date(user.planExpiry).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  // Recent leads table
+  renderRecentLeads();
+}
+
+// ── Leads ────────────────────────────────────────────────────
+function renderLeads(filter = '') {
+  const tbody = document.getElementById('leads-table');
+  const recentTbody = document.getElementById('recent-leads-table');
+  if (!tbody) return;
+
+  const search = (document.getElementById('lead-search')?.value || '').toLowerCase();
+  const statusF = document.getElementById('status-filter')?.value || '';
+
+  const filtered = leads.filter(l =>
+    (!search || l.name.toLowerCase().includes(search) || l.email.toLowerCase().includes(search)) &&
+    (!statusF || l.status === statusF)
+  );
+
+  tbody.innerHTML = filtered.length === 0
+    ? `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);">No leads found</td></tr>`
+    : filtered.map(lead => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">
+              ${lead.name.charAt(0)}
+            </div>
+            <span style="font-weight:500;font-size:14px;">${lead.name}</span>
+          </div>
+        </td>
+        <td style="font-size:13px;color:var(--muted);">${lead.email}</td>
+        <td style="font-size:13px;color:var(--muted);">${lead.phone}</td>
+        <td style="font-size:13px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);">${lead.message}</td>
+        <td>
+          <select onchange="updateLeadStatus(${lead.id}, this.value)" style="background:none;border:none;cursor:pointer;font-size:12px;font-weight:500;outline:none;" class="status-${lead.status}">
+            <option value="new" ${lead.status==='new'?'selected':''}>🔵 New</option>
+            <option value="contacted" ${lead.status==='contacted'?'selected':''}>🟡 Contacted</option>
+            <option value="converted" ${lead.status==='converted'?'selected':''}>🟢 Converted</option>
+          </select>
+        </td>
+        <td style="font-size:13px;color:var(--muted);">${formatDate(lead.date)}</td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button onclick="addFollowupForLead('${lead.name}')" style="background:rgba(108,99,255,0.1);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;color:var(--accent);">Follow up</button>
+            <button onclick="deleteLead(${lead.id})" style="background:rgba(255,107,107,0.1);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px;color:var(--danger);">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+}
+
+function renderRecentLeads() {
+  const tbody = document.getElementById('recent-leads-table');
+  if (!tbody) return;
+  tbody.innerHTML = leads.slice(0, 5).map(lead => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:27px;height:27px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${lead.name.charAt(0)}</div>
+          <span style="font-size:13px;font-weight:500;">${lead.name}</span>
+        </div>
+      </td>
+      <td style="font-size:12px;color:var(--muted);">${lead.email}</td>
+      <td><span class="badge ${lead.status==='new'?'badge-accent':lead.status==='contacted'?'badge-warning':'badge-success'}" style="font-size:11px;">${lead.status}</span></td>
+      <td style="font-size:12px;color:var(--muted);">${formatDate(lead.date)}</td>
+    </tr>
+  `).join('');
+  const stat = document.getElementById('stat-leads');
+  if (stat) stat.textContent = leads.length;
+}
+
+function filterLeads() { renderLeads(); }
+
+function updateLeadStatus(id, status) {
+  const lead = leads.find(l => l.id === id);
+  if (lead) { lead.status = status; showToast('Status updated', 'success'); renderRecentLeads(); }
+}
+
+function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  leads = leads.filter(l => l.id !== id);
+  renderLeads();
+  renderRecentLeads();
+  showToast('Lead deleted', 'success');
+}
+
+function openAddLeadModal() {
+  document.getElementById('add-lead-modal').classList.add('open');
+}
+
+function addLead(e) {
+  e.preventDefault();
+  const name = document.getElementById('new-name').value.trim();
+  const email = document.getElementById('new-email').value.trim();
+  const phone = document.getElementById('new-phone').value.trim();
+  const message = document.getElementById('new-message').value.trim();
+  leads.unshift({ id: Date.now(), name, email, phone: phone || '—', message: message || '—', status: 'new', date: new Date().toISOString().split('T')[0] });
+  closeModal('add-lead-modal');
+  renderLeads();
+  renderRecentLeads();
+  showToast('Lead added!', 'success');
+  e.target.reset();
+}
+
+function exportLeads() {
+  const rows = [['Name', 'Email', 'Phone', 'Message', 'Status', 'Date']];
+  leads.forEach(l => rows.push([l.name, l.email, l.phone, l.message, l.status, l.date]));
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'saleiq-leads.csv';
+  a.click();
+  showToast('Leads exported!', 'success');
+}
+
+// ── Follow-Ups ────────────────────────────────────────────────
+function renderFollowups() {
+  const container = document.getElementById('followups-list');
+  if (!container) return;
+
+  const groups = {
+    overdue: followups.filter(f => f.status === 'overdue'),
+    today: followups.filter(f => f.status === 'today'),
+    upcoming: followups.filter(f => f.status === 'upcoming'),
+    done: followups.filter(f => f.status === 'done'),
+  };
+
+  const fuOv = document.getElementById('fu-overdue');
+  const fuToday = document.getElementById('fu-today');
+  const fuDone = document.getElementById('fu-done');
+  if (fuOv) fuOv.textContent = groups.overdue.length;
+  if (fuToday) fuToday.textContent = groups.today.length;
+  if (fuDone) fuDone.textContent = groups.done.length;
+
+  const renderGroup = (title, items, color) => {
+    if (!items.length) return '';
+    return `
+      <div style="margin-bottom:24px;">
+        <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:${color};margin-bottom:12px;">${title} (${items.length})</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${items.map(f => `
+            <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${color};border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+              <div>
+                <p style="font-size:15px;font-weight:600;margin-bottom:4px;">${f.name}</p>
+                <p style="font-size:13px;color:var(--muted);">${f.notes}</p>
+                <p style="font-size:12px;color:var(--muted);margin-top:4px;">📅 ${formatDate(f.date)}</p>
+              </div>
+              <div style="display:flex;gap:8px;">
+                ${f.status !== 'done' ? `<button onclick="markFollowupDone(${f.id})" style="background:rgba(67,232,192,0.1);border:1px solid rgba(67,232,192,0.2);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--success);cursor:pointer;">✓ Done</button>` : ''}
+                <button onclick="deleteFollowup(${f.id})" style="background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.15);border-radius:8px;padding:7px 14px;font-size:12px;font-weight:500;color:var(--danger);cursor:pointer;">Delete</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  };
+
+  container.innerHTML =
+    renderGroup('🔴 Overdue', groups.overdue, 'var(--danger)') +
+    renderGroup('🟡 Due Today', groups.today, 'var(--warning)') +
+    renderGroup('🔵 Upcoming', groups.upcoming, 'var(--accent)') +
+    renderGroup('✅ Completed', groups.done, 'var(--success)') ||
+    `<div style="text-align:center;padding:60px;color:var(--muted);">No follow-ups yet. Add your first reminder!</div>`;
+}
+
+function openAddFollowupModal() {
+  document.getElementById('add-followup-modal').classList.add('open');
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fu-date').value = today;
+}
+
+function addFollowupForLead(name) {
+  switchSection('followups');
+  document.getElementById('add-followup-modal').classList.add('open');
+  document.getElementById('fu-name').value = name;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fu-date').value = today;
+}
+
+function addFollowup(e) {
+  e.preventDefault();
+  const name = document.getElementById('fu-name').value.trim();
+  const date = document.getElementById('fu-date').value;
+  const notes = document.getElementById('fu-notes').value.trim();
+  const today = new Date().toISOString().split('T')[0];
+  const status = date < today ? 'overdue' : date === today ? 'today' : 'upcoming';
+  followups.unshift({ id: Date.now(), name, date, notes: notes || 'Follow up', status });
+  closeModal('add-followup-modal');
+  renderFollowups();
+  showToast('Reminder added!', 'success');
+  e.target.reset();
+}
+
+function markFollowupDone(id) {
+  const f = followups.find(f => f.id === id);
+  if (f) { f.status = 'done'; renderFollowups(); showToast('Marked as done!', 'success'); }
+}
+
+function deleteFollowup(id) {
+  followups = followups.filter(f => f.id !== id);
+  renderFollowups();
+  showToast('Reminder deleted', 'success');
+}
+
+// ── Widget ────────────────────────────────────────────────────
+function selectColor(color, el) {
+  selectedColor = color;
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Update preview
+  const prevBtn = document.getElementById('prev-btn');
+  if (prevBtn) prevBtn.style.background = color;
+  updateEmbedCode();
+}
+
+function updateEmbedCode() {
+  const name = document.getElementById('agent-name')?.value || 'Alex';
+  const greeting = document.getElementById('agent-greeting')?.value || 'Hi!';
+  const color = selectedColor;
+
+  const code = document.getElementById('embed-code');
+  if (code) {
+    code.textContent = `<script
+  src="https://cdn.saleiq.app/widget.js"
+  data-key="sk_live_YOUR_KEY"
+  data-agent="${name}"
+  data-color="${color}"
+  data-greeting="${greeting.substring(0, 80)}"
+><\/script>`;
+  }
+
+  const prevName = document.getElementById('prev-name');
+  if (prevName) prevName.textContent = name;
+  const prevGreeting = document.getElementById('prev-greeting');
+  if (prevGreeting) prevGreeting.textContent = greeting;
+}
+
+// Update preview live
+['agent-name', 'agent-greeting'].forEach(id => {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById(id)?.addEventListener('input', updateEmbedCode);
+  });
+});
+
+function copyEmbedCode() {
+  const code = document.getElementById('embed-code')?.textContent || '';
+  navigator.clipboard.writeText(code).then(() => showToast('Code copied!', 'success'));
+}
+
+function saveWidgetSettings() {
+  showToast('Widget settings saved!', 'success');
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function formatDate(str) {
+  if (!str) return '—';
+  return new Date(str).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('open');
+}
+
+// Close modal on overlay click
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+
+</script>
+</body>
+</html>
