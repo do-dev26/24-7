@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — SaleIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <style>
+    body{font-family:'Inter',sans-serif;}
+    .legal{max-width:700px;margin:0 auto;padding:56px 24px 80px;}
+    .legal h2{font-size:16px;font-weight:600;color:#0d0d0d;margin:32px 0 10px;}
+    .legal p,.legal li{font-size:14px;color:#6b6b6b;line-height:1.8;margin-bottom:10px;}
+    .legal ul{padding-left:20px;margin-bottom:12px;}
+    .legal a{color:#10a37f;text-decoration:none;}
+    .legal a:hover{text-decoration:underline;}
+  </style>
+</head>
+<body>
+<div id="navbar"></div>
+<div class="legal">
+  <div style="margin-bottom:36px;">
+    <p style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#10a37f;margin-bottom:8px;">Legal</p>
+    <h1 style="font-size:clamp(22px,3vw,32px);font-weight:700;letter-spacing:-0.03em;margin-bottom:6px;">Privacy Policy</h1>
+    <p style="font-size:14px;color:#ababab;">Last updated: April 19, 2025</p>
+  </div>
+  
+<h2>1. Information We Collect</h2>
+<p>We collect information you provide (name, email, payment info) and usage data (log files, cookies, device info) automatically when you use our Service.</p>
+<h2>2. How We Use Your Information</h2>
+<ul><li>Provide, maintain, and improve the Service</li><li>Process payments and send billing notifications</li><li>Communicate updates, security alerts, and support</li><li>Analyze usage patterns to improve the platform</li></ul>
+<h2>3. Data Sharing</h2>
+<p>We do not sell your personal information. We may share data with trusted service providers (payment processors, cloud infrastructure) under strict confidentiality agreements.</p>
+<h2>4. Cookies</h2>
+<p>We use cookies to maintain sessions, remember preferences, and analyze performance. You can control cookies through your browser settings.</p>
+<h2>5. Data Security</h2>
+<p>We implement industry-standard security including TLS encryption, access controls, and regular audits. No method of internet transmission is 100% secure.</p>
+<h2>6. Your Rights</h2>
+<p>You may request access, correction, deletion, or export of your personal data. Contact <a href="mailto:privacy@saleiq.app">privacy@saleiq.app</a>.</p>
+<h2>7. Changes</h2>
+<p>We may update this policy periodically. We will notify you of significant changes via email or the Service.</p>
+<h2>8. Contact</h2>
+<p>Privacy questions: <a href="mailto:privacy@saleiq.app">privacy@saleiq.app</a></p>
+  <div style="margin-top:40px;padding-top:24px;border-top:1px solid #f0f0f1;display:flex;gap:16px;flex-wrap:wrap;">
+    <a href="privacy.html" style="font-size:13px;color:#10a37f;text-decoration:none;">Privacy Policy →</a>
+    <a href="refund.html" style="font-size:13px;color:#10a37f;text-decoration:none;">Refund Policy →</a>
+    <a href="support.html" style="font-size:13px;color:#10a37f;text-decoration:none;">Contact Support →</a>
+  </div>
+</div>
+<div id="footer"></div>
+<script>
+function renderNavbar(p=""){const n=document.getElementById('navbar');if(!n)return;const li=localStorage.getItem('saleiq_user')!==null;n.innerHTML=`<nav style="position:fixed;top:0;left:0;right:0;z-index:500;height:57px;background:rgba(255,255,255,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #e5e5e6;display:flex;align-items:center;justify-content:space-between;padding:0 24px;"><a href="index.html" style="display:flex;align-items:center;gap:8px;text-decoration:none;"><div style="width:28px;height:28px;border-radius:7px;background:#10a37f;display:flex;align-items:center;justify-content:center;"><svg width="14" height="14" fill="white" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><span style="font-size:15px;font-weight:600;color:#0d0d0d;">SaleIQ</span></a><div style="display:flex;align-items:center;gap:2px;"><a href="index.html" style="padding:6px 12px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;color:#6b6b6b;">Home</a><a href="pricing.html" style="padding:6px 12px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;color:#6b6b6b;">Pricing</a><a href="support.html" style="padding:6px 12px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;color:#6b6b6b;">Support</a></div><div style="display:flex;align-items:center;gap:8px;">${li?`<a href="dashboard.html" style="background:#0d0d0d;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;">Dashboard</a>`:`<a href="login.html" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;color:#6b6b6b;text-decoration:none;border:1px solid #e5e5e6;">Log in</a><a href="signup.html" style="background:#0d0d0d;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;">Get started</a>`}</div></nav><div style="height:57px;"></div>`;}
+function renderFooter(){const f=document.getElementById('footer');if(!f)return;f.innerHTML=`<footer style="background:#f7f7f8;border-top:1px solid #e5e5e6;padding:40px 24px 28px;margin-top:60px;"><div style="max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;"><a href="index.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;"><div style="width:24px;height:24px;border-radius:6px;background:#10a37f;display:flex;align-items:center;justify-content:center;"><svg width="12" height="12" fill="white" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><span style="font-size:14px;font-weight:600;color:#0d0d0d;">SaleIQ</span></a><div style="display:flex;gap:20px;flex-wrap:wrap;"><a href="pricing.html" style="font-size:13px;color:#6b6b6b;text-decoration:none;">Pricing</a><a href="support.html" style="font-size:13px;color:#6b6b6b;text-decoration:none;">Support</a><a href="term-condition.html" style="font-size:13px;color:#6b6b6b;text-decoration:none;">Terms</a><a href="privacy.html" style="font-size:13px;color:#6b6b6b;text-decoration:none;">Privacy</a><a href="refund.html" style="font-size:13px;color:#6b6b6b;text-decoration:none;">Refund</a></div><p style="font-size:13px;color:#ababab;">© 2025 SaleIQ</p></div></footer>`;}
+renderNavbar();renderFooter();
+</script>
+</body>
+</html>
