@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — SaleIQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/tailwind.css">
+  <!-- Firebase SDK (v9 compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- SaleIQ Firebase config + API helper -->
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/api.js"></script>
+
+  <style>
+    *{box-sizing:border-box;}
+    body{font-family:'Inter',sans-serif;display:flex;background:#f7f7f8;margin:0;}
+    h1,h2,h3,h4{font-family:'Inter',sans-serif;}
+
+    /* Sidebar */
+    .sidebar{width:220px;min-height:100vh;background:#fff;border-right:1px solid #e5e5e6;display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+    .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;color:#6b6b6b;font-size:13.5px;font-weight:500;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:all 0.12s;margin-bottom:1px;font-family:'Inter',sans-serif;}
+    .nav-item:hover{background:#f7f7f8;color:#0d0d0d;}
+    .nav-item.active{background:#f0f0f1;color:#0d0d0d;}
+    .nav-item svg{flex-shrink:0;opacity:0.6;}
+    .nav-item.active svg{opacity:1;}
+
+    /* Main */
+    .dash-main{margin-left:220px;min-height:100vh;flex:1;}
+    .topbar{background:#fff;border-bottom:1px solid #e5e5e6;padding:0 28px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+    .content{padding:28px;}
+    .section-view{display:none;}
+    .section-view.active{display:block;}
+
+    /* Cards */
+    .card{background:#fff;border:1px solid #e5e5e6;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+    .card-section{background:#fff;border:1px solid #e5e5e6;border-radius:14px;padding:22px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+    .section-header{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #f0f0f1;}
+    .section-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+
+    /* Form */
+    .inp{width:100%;background:#fff;border:1px solid #e5e5e6;border-radius:8px;padding:9px 13px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s,box-shadow 0.15s;color:#0d0d0d;}
+    .inp:focus{border-color:#10a37f;box-shadow:0 0 0 3px rgba(16,163,127,0.1);}
+    .inp::placeholder{color:#ababab;}
+    .lbl{font-size:12px;font-weight:500;color:#6b6b6b;display:block;margin-bottom:5px;}
+    .field{margin-bottom:13px;}
+    .field:last-child{margin-bottom:0;}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+    @media(max-width:900px){.grid2{grid-template-columns:1fr;}.grid3{grid-template-columns:1fr 1fr;}}
+
+    /* Tags input */
+    .tags-wrap{border:1px solid #e5e5e6;border-radius:8px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:5px;cursor:text;min-height:40px;background:#fff;transition:border-color 0.15s,box-shadow 0.15s;}
+    .tags-wrap:focus-within{border-color:#10a37f;box-shadow:0 0 0 3px rgba(16,163,127,0.1);}
+    .tag{background:#f0f0f1;border-radius:5px;padding:3px 8px;font-size:12px;color:#374151;display:flex;align-items:center;gap:4px;}
+    .tag-x{cursor:pointer;color:#ababab;font-size:14px;line-height:1;}
+    .tag-x:hover{color:#dc2626;}
+    .tag-inp{border:none;outline:none;font-size:13px;font-family:'Inter',sans-serif;background:transparent;min-width:80px;color:#0d0d0d;}
+
+    /* Product card */
+    .prod-card{border:1px solid #e5e5e6;border-radius:10px;padding:14px;position:relative;background:#fafafa;}
+    .prod-img-preview{width:100%;height:80px;object-fit:cover;border-radius:6px;display:block;border:1px solid #e5e5e6;margin-top:8px;}
+
+    /* Stat cards */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+    .stat-card{background:#fff;border:1px solid #e5e5e6;border-radius:12px;padding:18px 20px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:500;}
+    .badge-green{background:#ecfdf5;color:#059669;}
+    .badge-yellow{background:#fffbeb;color:#d97706;}
+    .badge-blue{background:#eff6ff;color:#2563eb;}
+    .badge-gray{background:#f7f7f8;color:#6b6b6b;border:1px solid #e5e5e6;}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.12s;}
+    .btn-dark{background:#0d0d0d;color:#fff;}
+    .btn-dark:hover{background:#1a1a1a;}
+    .btn-light{background:#f7f7f8;color:#0d0d0d;border:1px solid #e5e5e6;}
+    .btn-light:hover{background:#f0f0f1;}
+    .btn-green{background:#10a37f;color:#fff;}
+    .btn-green:hover{background:#0d8f6f;}
+    .btn-red{background:#fef2f2;color:#dc2626;border:1px solid #fecaca;}
+
+    /* Toggle */
+    .toggle{position:relative;width:38px;height:21px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#e5e5e6;border-radius:99px;transition:0.2s;}
+    .toggle-slider::before{content:'';position:absolute;width:15px;height:15px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.15);}
+    .toggle input:checked+.toggle-slider{background:#10a37f;}
+    .toggle input:checked+.toggle-slider::before{transform:translateX(17px);}
+
+    /* Progress */
+    .progress-bar{height:4px;background:#f0f0f1;border-radius:99px;overflow:hidden;}
+    .progress-fill{height:100%;border-radius:99px;background:#10a37f;transition:width 0.4s;}
+
+    /* Table */
+    .data-table{width:100%;border-collapse:collapse;}
+    .data-table th{padding:9px 14px;text-align:left;font-size:11px;font-weight:600;color:#ababab;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid #f0f0f1;background:#fafafa;}
+    .data-table td{padding:11px 14px;border-bottom:1px solid #f7f7f8;font-size:13.5px;color:#374151;}
+    .data-table tr:last-child td{border-bottom:none;}
+    .data-table tr:hover td{background:#fafafa;}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.3);backdrop-filter:blur(4px);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s;}
+    .modal-overlay.open{opacity:1;pointer-events:all;}
+    .modal{background:#fff;border:1px solid #e5e5e6;border-radius:16px;padding:26px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.12);transform:translateY(8px) scale(0.98);transition:transform 0.2s;}
+    .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+
+    /* Toast */
+    .toast-container{position:fixed;bottom:20px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:8px;}
+    .toast{background:#0d0d0d;color:#fff;padding:11px 16px;border-radius:9px;font-size:13px;font-family:'Inter',sans-serif;box-shadow:0 4px 16px rgba(0,0,0,0.15);min-width:220px;animation:slideUp 0.25s ease;}
+    @keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+    /* Code block */
+    .code-block{background:#fafafa;border:1px solid #e5e5e6;border-radius:9px;padding:14px 16px;font-family:'Fira Code','Courier New',monospace;font-size:12.5px;color:#374151;line-height:1.7;overflow-x:auto;white-space:pre;}
+
+    /* Color swatch */
+    .color-swatch{width:26px;height:26px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:all 0.12s;}
+    .color-swatch:hover{transform:scale(1.15);}
+    .color-swatch.active{border-color:#0d0d0d;}
+
+    /* Divider */
+    .divider{height:1px;background:#f0f0f1;margin:16px 0;}
+
+    /* Business type selector */
+    .btype-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+    @media(max-width:800px){.btype-grid{grid-template-columns:1fr 1fr;}}
+    .btype-card{border:1.5px solid #e5e5e6;border-radius:10px;padding:12px 10px;text-align:center;cursor:pointer;transition:all 0.15s;background:#fff;}
+    .btype-card:hover{border-color:#10a37f;background:#f0faf7;}
+    .btype-card.selected{border-color:#10a37f;background:#f0faf7;box-shadow:0 0 0 1px #10a37f;}
+    .btype-card .btype-icon{font-size:22px;margin-bottom:5px;}
+    .btype-card .btype-label{font-size:12px;font-weight:500;color:#374151;}
+
+    /* Fu card */
+    .fu-card{background:#fff;border:1px solid #e5e5e6;border-left:3px solid;border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+  </style>
+  <!-- Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════ SIDEBAR ═══════════════ -->
+<div class="sidebar">
+  <div style="padding:15px 14px 12px;border-bottom:1px solid #f0f0f1;">
+    <a href="index.html" style="display:flex;align-items:center;gap:7px;text-decoration:none;">
+      <div style="width:26px;height:26px;border-radius:6px;background:#10a37f;display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" fill="white" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+      <span style="font-size:15px;font-weight:600;color:#0d0d0d;">SaleIQ</span>
+    </a>
+  </div>
+
+  <div style="padding:10px 10px;flex:1;overflow-y:auto;">
+    <p style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#ababab;padding:6px 10px 8px;">Main</p>
+    <button class="nav-item active" onclick="switchSection('overview')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Overview
+    </button>
+    <button class="nav-item" onclick="switchSection('leads')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Leads
+    </button>
+    <button class="nav-item" onclick="switchSection('followups')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>Follow-Ups
+    </button>
+    <button class="nav-item" onclick="switchSection('widget')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>Widget
+    </button>
+
+    <p style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;color:#ababab;padding:14px 10px 8px;">Configuration</p>
+    <button class="nav-item" onclick="switchSection('setup')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Business Setup
+    </button>
+    <button class="nav-item" onclick="switchSection('billing')">
+      <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>Billing
+    </button>
+  </div>
+
+  <div style="padding:12px 10px;border-top:1px solid #f0f0f1;" id="sidebar-user"></div>
+</div>
+
+<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="dash-main">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <h2 style="font-size:15px;font-weight:600;color:#0d0d0d;" id="page-title">Overview</h2>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:#059669;background:#ecfdf5;padding:4px 10px;border-radius:99px;border:1px solid #d1fae5;">
+        <span style="width:6px;height:6px;border-radius:50%;background:#10a37f;display:inline-block;"></span>Agent Online
+      </span>
+      <button onclick="switchSection('setup')" class="btn btn-dark" style="padding:7px 14px;font-size:13px;">⚙️ Setup</button>
+    </div>
+  </div>
+
+  <!-- ── OVERVIEW ── -->
+  <div class="content section-view active" id="sec-overview">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#ababab;">Total Leads</p>
+          <div style="width:30px;height:30px;border-radius:7px;background:#eff6ff;display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" fill="none" stroke="#3b82f6" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+        </div>
+        <p style="font-size:26px;font-weight:700;letter-spacing:-0.03em;" id="stat-leads">48</p>
+        <p style="font-size:12px;color:#059669;margin-top:3px;">↑ +12 this week</p>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#ababab;">Conversion</p>
+          <div style="width:30px;height:30px;border-radius:7px;background:#ecfdf5;display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" fill="none" stroke="#10a37f" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div>
+        </div>
+        <p style="font-size:26px;font-weight:700;letter-spacing:-0.03em;">32%</p>
+        <p style="font-size:12px;color:#059669;margin-top:3px;">↑ +4% vs last month</p>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#ababab;">Words Used</p>
+          <div style="width:30px;height:30px;border-radius:7px;background:#fffbeb;display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" fill="none" stroke="#f59e0b" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+        </div>
+        <p style="font-size:26px;font-weight:700;letter-spacing:-0.03em;" id="stat-words">3,420</p>
+        <div class="progress-bar" style="margin-top:8px;"><div class="progress-fill" id="words-bar" style="width:34%;"></div></div>
+        <p style="font-size:11px;color:#ababab;margin-top:4px;" id="words-label">3,420 / 10,000</p>
+      </div>
+      <div class="stat-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#ababab;">Plan Expiry</p>
+          <div style="width:30px;height:30px;border-radius:7px;background:#fef2f2;display:flex;align-items:center;justify-content:center;"><svg width="13" height="13" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        </div>
+        <p style="font-size:26px;font-weight:700;letter-spacing:-0.03em;" id="stat-expiry">18 days</p>
+        <button onclick="switchSection('billing')" style="font-size:12px;color:#10a37f;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;padding:0;margin-top:3px;">Renew →</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;">
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid #f0f0f1;display:flex;align-items:center;justify-content:space-between;">
+          <p style="font-size:14px;font-weight:600;">Recent Leads</p>
+          <button onclick="switchSection('leads')" style="font-size:13px;color:#10a37f;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;">View all →</button>
+        </div>
+        <table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Date</th></tr></thead><tbody id="recent-leads-table"></tbody></table>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="card">
+          <p style="font-size:13px;font-weight:600;margin-bottom:10px;">Quick Actions</p>
+          <div style="display:flex;flex-direction:column;gap:5px;">
+            <button onclick="switchSection('setup')" style="background:#f7f7f8;border:1px solid #e5e5e6;border-radius:7px;padding:9px 11px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#374151;font-family:'Inter',sans-serif;transition:background 0.12s;" onmouseover="this.style.background='#f0f0f1'" onmouseout="this.style.background='#f7f7f8'">⚙️ Business Setup</button>
+            <button onclick="switchSection('leads')" style="background:#f7f7f8;border:1px solid #e5e5e6;border-radius:7px;padding:9px 11px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#374151;font-family:'Inter',sans-serif;transition:background 0.12s;" onmouseover="this.style.background='#f0f0f1'" onmouseout="this.style.background='#f7f7f8'">👥 Manage Leads</button>
+            <button onclick="switchSection('widget')" style="background:#f7f7f8;border:1px solid #e5e5e6;border-radius:7px;padding:9px 11px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#374151;font-family:'Inter',sans-serif;transition:background 0.12s;" onmouseover="this.style.background='#f0f0f1'" onmouseout="this.style.background='#f7f7f8'">🎨 Widget Settings</button>
+          </div>
+        </div>
+        <div style="background:#f0faf7;border:1px solid #d1fae5;border-radius:10px;padding:13px 14px;">
+          <p style="font-size:13px;font-weight:600;color:#065f46;margin-bottom:4px;">💡 Tip</p>
+          <p style="font-size:12.5px;color:#047857;line-height:1.6;">Fill Business Setup to train your AI agent with accurate product & pricing info.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── BUSINESS SETUP ── -->
+  <div class="content section-view" id="sec-setup" style="max-width:780px;">
+
+    <div style="margin-bottom:22px;">
+      <h2 style="font-size:18px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;">Business Setup</h2>
+      <p style="font-size:14px;color:#6b6b6b;">This information trains your AI agent. Fill it carefully — the more detail, the better your agent performs.</p>
+    </div>
+
+    <!-- API status bar -->
+    <div id="api-status" style="display:none;background:#f0faf7;border:1px solid #d1fae5;border-radius:9px;padding:11px 16px;margin-bottom:16px;font-size:13px;color:#047857;display:flex;align-items:center;gap:8px;">
+      <svg width="14" height="14" fill="#10a37f" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+      <span id="api-status-text">Business data saved successfully.</span>
+    </div>
+
+    <!-- ① Business Type -->
+    <div class="card-section">
+      <div class="section-header">
+        <div class="section-icon" style="background:#eff6ff;">🏷️</div>
+        <div><p style="font-size:14px;font-weight:600;color:#0d0d0d;margin-bottom:1px;">Business Type</p><p style="font-size:12px;color:#ababab;">Select your category — additional fields will appear below</p></div>
+      </div>
+      <div class="btype-grid">
+        <div class="btype-card selected" onclick="selectBType('real_estate',this)"><div class="btype-icon">🏠</div><div class="btype-label">Real Estate</div></div>
+        <div class="btype-card" onclick="selectBType('restaurant',this)"><div class="btype-icon">🍽️</div><div class="btype-label">Restaurant</div></div>
+        <div class="btype-card" onclick="selectBType('fno',this)"><div class="btype-icon">📈</div><div class="btype-label">F&O / Finance</div></div>
+        <div class="btype-card" onclick="selectBType('ecommerce',this)"><div class="btype-icon">🛒</div><div class="btype-label">E-Commerce</div></div>
+        <div class="btype-card" onclick="selectBType('saas',this)"><div class="btype-icon">💻</div><div class="btype-label">SaaS</div></div>
+        <div class="btype-card" onclick="selectBType('education',this)"><div class="btype-icon">🎓</div><div class="btype-label">Education</div></div>
+        <div class="btype-card" onclick="selectBType('healthcare',this)"><div class="btype-icon">🏥</div><div class="btype-label">Healthcare</div></div>
+        <div class="btype-card" onclick="selectBType('other',this)"><div class="btype-icon">⚡</div><div class="btype-label">Other</div></div>
+      </div>
+      <input type="hidden" id="biz-type" value="real_estate">
+    </div>
+
+    <!-- ② Core Info -->
+    <div class="card-section">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f0faf7;">🏢</div>
+        <div><p style="font-size:14px;font-weight:600;color:#0d0d0d;margin-bottom:1px;">Core Business Info</p><p style="font-size:12px;color:#ababab;">Basic details shown to your AI agent and visitors</p></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Business Name *</label><input type="text" id="biz-name" class="inp" placeholder="e.g. Sharma Properties"></div>
+        <div class="field"><label class="lbl">Tagline</label><input type="text" id="biz-tagline" class="inp" placeholder="e.g. Find Your Dream Home"></div>
+      </div>
+      <div class="field"><label class="lbl">Description *</label><textarea id="biz-desc" class="inp" rows="3" style="resize:vertical;" placeholder="Describe your business, what you offer, and who you serve..."></textarea></div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Website URL</label><div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;">🌐</span><input type="url" id="biz-website" class="inp" placeholder="https://yourwebsite.com" style="padding-left:30px;"></div><p style="font-size:11px;color:#ababab;margin-top:4px;">We'll auto-scrape content to train your agent</p></div>
+        <div class="field"><label class="lbl">Phone Number</label><div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;">📞</span><input type="tel" id="biz-phone" class="inp" placeholder="+91-9876543210" style="padding-left:30px;"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Working Hours</label><input type="text" id="biz-hours" class="inp" placeholder="Mon-Sat 10am-7pm"></div>
+        <div class="field"><label class="lbl">Google Ratings</label><div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;">⭐</span><input type="text" id="biz-ratings" class="inp" placeholder="4.9★ Google (300+ reviews)" style="padding-left:30px;"></div></div>
+      </div>
+      <div class="field"><label class="lbl">Current Offer / Promotion</label><div style="position:relative;"><span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;">🎁</span><input type="text" id="biz-offer" class="inp" placeholder="Zero brokerage this month!" style="padding-left:30px;"></div></div>
+    </div>
+
+    <!-- ③ CTA -->
+    <div class="card-section">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fffbeb;">🎯</div>
+        <div><p style="font-size:14px;font-weight:600;color:#0d0d0d;margin-bottom:1px;">Call to Action</p><p style="font-size:12px;color:#ababab;">What should the agent push visitors to do?</p></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">CTA Goal</label>
+          <select id="cta-goal" class="inp">
+            <option value="lead">Capture Lead</option>
+            <option value="booking">Book Appointment</option>
+            <option value="call">Schedule Call</option>
+            <option value="visit">Site Visit</option>
+            <option value="demo">Book Demo</option>
+            <option value="purchase">Purchase</option>
+          </select>
+        </div>
+        <div class="field"><label class="lbl">CTA Button Text</label><input type="text" id="cta-text" class="inp" placeholder="Book Free Site Visit"></div>
+      </div>
+    </div>
+
+    <!-- ④ Products / Services -->
+    <div class="card-section">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fef2f2;">📦</div>
+        <div><p style="font-size:14px;font-weight:600;color:#0d0d0d;margin-bottom:1px;">Products / Services</p><p style="font-size:12px;color:#ababab;">Add your key offerings — shown in the AI agent widget</p></div>
+      </div>
+      <div id="products-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px;"></div>
+      <button type="button" onclick="addProduct()" style="width:100%;background:#f7f7f8;border:1.5px dashed #d0d0d0;border-radius:9px;padding:11px;font-size:13px;font-weight:500;color:#6b6b6b;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;" onmouseover="this.style.borderColor='#10a37f';this.style.color='#10a37f'" onmouseout="this.style.borderColor='#d0d0d0';this.style.color='#6b6b6b'">+ Add Product / Service</button>
+    </div>
+
+    <!-- ⑤ Dynamic fields by business type -->
+    <div id="dynamic-fields"></div>
+
+    <!-- Save -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 0 4px;">
+      <button type="button" onclick="loadSetup()" class="btn btn-light">Load Saved</button>
+      <div style="display:flex;gap:10px;">
+        <button type="button" onclick="previewPayload()" class="btn btn-light">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>Preview JSON
+        </button>
+        <button type="button" onclick="saveSetup()" style="background:#0d0d0d;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;gap:7px;" onmouseover="this.style.background='#1a1a1a'" onmouseout="this.style.background='#0d0d0d'">
+          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save & Train Agent
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── LEADS ── -->
+  <div class="content section-view" id="sec-leads">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input type="text" id="lead-search" placeholder="Search..." class="inp" style="width:200px;" oninput="renderLeads()">
+        <select id="status-filter" class="inp" style="width:140px;" onchange="renderLeads()"><option value="">All Status</option><option value="new">New</option><option value="contacted">Contacted</option><option value="converted">Converted</option></select>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="exportLeads()" class="btn btn-light"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export CSV</button>
+        <button onclick="document.getElementById('add-lead-modal').classList.add('open')" class="btn btn-dark">+ Add Lead</button>
+      </div>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden;"><table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Message</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead><tbody id="leads-table"></tbody></table></div>
+  </div>
+
+  <!-- ── FOLLOW-UPS ── -->
+  <div class="content section-view" id="sec-followups">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex:1;max-width:460px;">
+        <div class="stat-card" style="text-align:center;padding:13px;"><p style="font-size:20px;font-weight:700;color:#dc2626;" id="fu-overdue">2</p><p style="font-size:11px;color:#6b6b6b;">Overdue</p></div>
+        <div class="stat-card" style="text-align:center;padding:13px;"><p style="font-size:20px;font-weight:700;color:#d97706;" id="fu-today">5</p><p style="font-size:11px;color:#6b6b6b;">Today</p></div>
+        <div class="stat-card" style="text-align:center;padding:13px;"><p style="font-size:20px;font-weight:700;color:#059669;" id="fu-done">18</p><p style="font-size:11px;color:#6b6b6b;">Done</p></div>
+      </div>
+      <button onclick="document.getElementById('add-followup-modal').classList.add('open')" class="btn btn-dark">+ Add Reminder</button>
+    </div>
+    <div id="followups-list"></div>
+  </div>
+
+  <!-- ── WIDGET ── -->
+  <div class="content section-view" id="sec-widget">
+    <div style="display:grid;grid-template-columns:1fr 300px;gap:18px;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="card">
+          <p style="font-size:14px;font-weight:600;margin-bottom:14px;">Agent Identity</p>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><label class="lbl">Agent Name</label><input type="text" id="agent-name" class="inp" value="Alex" oninput="updatePreview()"></div>
+            <div><label class="lbl">Greeting</label><textarea id="agent-greeting" class="inp" rows="2" style="resize:vertical;" oninput="updatePreview()">👋 Hi! I'm Alex, your AI sales assistant. How can I help you today?</textarea></div>
+            <div><label class="lbl">Personality</label><select id="agent-personality" class="inp"><option value="friendly" selected>Friendly & Casual</option><option value="professional">Professional & Formal</option><option value="concise">Direct & Concise</option></select></div>
+          </div>
+        </div>
+        <div class="card">
+          <p style="font-size:14px;font-weight:600;margin-bottom:12px;">Brand Color</p>
+          <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+            <div class="color-swatch active" style="background:#10a37f;" onclick="selectColor('#10a37f',this)"></div>
+            <div class="color-swatch" style="background:#2563eb;" onclick="selectColor('#2563eb',this)"></div>
+            <div class="color-swatch" style="background:#7c3aed;" onclick="selectColor('#7c3aed',this)"></div>
+            <div class="color-swatch" style="background:#dc2626;" onclick="selectColor('#dc2626',this)"></div>
+            <div class="color-swatch" style="background:#d97706;" onclick="selectColor('#d97706',this)"></div>
+            <div class="color-swatch" style="background:#0d0d0d;" onclick="selectColor('#0d0d0d',this)"></div>
+            <input type="color" id="custom-color" value="#10a37f" onchange="selectColor(this.value,null)" style="width:26px;height:26px;border-radius:6px;border:1px solid #e5e5e6;cursor:pointer;padding:1px;">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <p style="font-size:13.5px;color:#374151;">Show SaleIQ branding</p>
+            <label class="toggle"><input type="checkbox" id="show-branding" checked><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+            <p style="font-size:14px;font-weight:600;">Embed Code</p>
+            <button onclick="copyEmbedCode()" class="btn btn-light" style="padding:5px 11px;font-size:12px;">Copy</button>
+          </div>
+          <div class="code-block" id="embed-code">&lt;script src="https://cdn.saleiq.app/widget.js" data-key="sk_live_YOUR_KEY" data-agent="Alex" data-color="#10a37f"&gt;&lt;/script&gt;</div>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px;font-weight:600;color:#ababab;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;">Live Preview</p>
+        <div style="background:#fff;border:1px solid #e5e5e6;border-radius:14px;padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #f0f0f1;">
+            <div id="prev-avatar" style="width:30px;height:30px;border-radius:50%;background:#10a37f;display:flex;align-items:center;justify-content:center;font-size:13px;">🤖</div>
+            <div><p id="prev-name" style="font-size:13px;font-weight:600;">Alex</p><div style="display:flex;align-items:center;gap:4px;"><div style="width:5px;height:5px;border-radius:50%;background:#10a37f;"></div><p style="font-size:11px;color:#6b6b6b;">Online</p></div></div>
+          </div>
+          <div id="prev-greeting" style="background:#f7f7f8;border-radius:9px;padding:10px 12px;font-size:13px;color:#374151;line-height:1.6;margin-bottom:12px;">👋 Hi! I'm Alex, your AI assistant. How can I help?</div>
+          <div style="display:flex;gap:6px;"><input type="text" placeholder="Type..." style="flex:1;background:#f7f7f8;border:1px solid #e5e5e6;border-radius:7px;padding:8px 10px;font-size:12px;outline:none;font-family:'Inter',sans-serif;"><button id="prev-btn" style="background:#10a37f;border:none;border-radius:7px;padding:8px 11px;cursor:pointer;"><svg width="12" height="12" fill="white" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:14px;display:flex;justify-content:flex-end;"><button onclick="showToast('Widget saved!','success')" class="btn btn-dark">Save Changes</button></div>
+  </div>
+
+  <!-- ── BILLING ── -->
+  <div class="content section-view" id="sec-billing">
+    <div style="max-width:600px;display:flex;flex-direction:column;gap:13px;">
+      <div class="card" style="border-color:#10a37f;border-width:1.5px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+          <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><h3 style="font-size:16px;font-weight:600;" id="billing-plan-name">Pro Plan</h3><span class="badge badge-green">Active</span></div><p style="font-size:13px;color:#6b6b6b;">Renews <span id="billing-expiry">May 19, 2025</span> · <span id="billing-price">$79/month</span></p></div>
+          <a href="pricing.html" class="btn btn-light" style="font-size:13px;padding:7px 14px;">Change Plan</a>
+        </div>
+        <div style="margin-top:14px;padding-top:13px;border-top:1px solid #f0f0f1;"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><p style="font-size:13px;color:#6b6b6b;">Words used</p><p style="font-size:13px;font-weight:500;" id="bill-words">3,420 / 10,000</p></div><div class="progress-bar"><div class="progress-fill" id="bill-bar" style="width:34%;"></div></div></div>
+      </div>
+      <div style="background:#f0faf7;border:1px solid #d1fae5;border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;"><div><p style="font-weight:600;font-size:14px;color:#065f46;margin-bottom:2px;">Need more words?</p><p style="font-size:13px;color:#047857;">Upgrade to Pro for 10,000 words + unlimited widgets.</p></div><a href="pricing.html" class="btn btn-green" style="font-size:13px;padding:8px 15px;">Upgrade</a></div>
+      <div class="card"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;"><p style="font-size:14px;font-weight:600;">Payment Method</p><button onclick="showToast('Coming soon','info')" class="btn btn-light" style="font-size:12px;padding:5px 11px;">Update</button></div><div style="display:flex;align-items:center;gap:10px;"><div style="background:#f7f7f8;border:1px solid #e5e5e6;border-radius:6px;padding:5px 11px;font-size:13px;font-weight:600;">VISA</div><div><p style="font-size:14px;font-weight:500;">•••• •••• •••• 4242</p><p style="font-size:12px;color:#ababab;">Expires 09/27</p></div></div></div>
+      <div class="card" style="padding:0;overflow:hidden;"><div style="padding:13px 17px;border-bottom:1px solid #f0f0f1;"><p style="font-size:14px;font-weight:600;">Invoices</p></div><table class="data-table"><thead><tr><th>Date</th><th>Amount</th><th>Plan</th><th>Status</th><th></th></tr></thead><tbody><tr><td>Apr 1, 2025</td><td>$79.00</td><td>Pro</td><td><span class="badge badge-green">Paid</span></td><td><button style="font-size:12px;color:#10a37f;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;">Download</button></td></tr><tr><td>Mar 1, 2025</td><td>$79.00</td><td>Pro</td><td><span class="badge badge-green">Paid</span></td><td><button style="font-size:12px;color:#10a37f;background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;">Download</button></td></tr></tbody></table></div>
+      <div class="card" style="border-color:#fecaca;"><p style="font-size:14px;font-weight:600;color:#dc2626;margin-bottom:4px;">Cancel Subscription</p><p style="font-size:13px;color:#6b6b6b;margin-bottom:12px;line-height:1.6;">Access continues until end of billing period.</p><button onclick="showToast('Contact support to cancel','info')" class="btn btn-red">Cancel Plan</button></div>
+    </div>
+  </div>
+
+</div><!-- /dash-main -->
+
+<!-- ── MODALS ── -->
+<div class="modal-overlay" id="add-lead-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><h3 style="font-size:16px;font-weight:600;">Add New Lead</h3><button onclick="document.getElementById('add-lead-modal').classList.remove('open')" style="background:none;border:none;cursor:pointer;color:#ababab;"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form onsubmit="addLead(event)"><div style="display:flex;flex-direction:column;gap:12px;"><div><label class="lbl">Name *</label><input type="text" id="new-name" class="inp" required></div><div><label class="lbl">Email *</label><input type="email" id="new-email" class="inp" required></div><div><label class="lbl">Phone</label><input type="tel" id="new-phone" class="inp" placeholder="+91 9876543210"></div><div><label class="lbl">Notes</label><textarea id="new-message" class="inp" rows="2"></textarea></div><div style="display:flex;gap:8px;margin-top:4px;"><button type="button" onclick="document.getElementById('add-lead-modal').classList.remove('open')" class="btn btn-light" style="flex:1;justify-content:center;">Cancel</button><button type="submit" class="btn btn-dark" style="flex:1;justify-content:center;">Add Lead</button></div></div></form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="add-followup-modal">
+  <div class="modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;"><h3 style="font-size:16px;font-weight:600;">Add Reminder</h3><button onclick="document.getElementById('add-followup-modal').classList.remove('open')" style="background:none;border:none;cursor:pointer;color:#ababab;"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <form onsubmit="addFollowup(event)"><div style="display:flex;flex-direction:column;gap:12px;"><div><label class="lbl">Lead Name</label><input type="text" id="fu-name" class="inp" required></div><div><label class="lbl">Date</label><input type="date" id="fu-date" class="inp" required></div><div><label class="lbl">Notes</label><textarea id="fu-notes" class="inp" rows="2"></textarea></div><div style="display:flex;gap:8px;margin-top:4px;"><button type="button" onclick="document.getElementById('add-followup-modal').classList.remove('open')" class="btn btn-light" style="flex:1;justify-content:center;">Cancel</button><button type="submit" class="btn btn-dark" style="flex:1;justify-content:center;">Add</button></div></div></form>
+  </div>
+</div>
+
+<!-- JSON Preview Modal -->
+<div class="modal-overlay" id="json-modal">
+  <div class="modal" style="max-width:600px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;"><h3 style="font-size:16px;font-weight:600;">API Payload Preview</h3><button onclick="document.getElementById('json-modal').classList.remove('open')" style="background:none;border:none;cursor:pointer;color:#ababab;"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <p style="font-size:12px;color:#ababab;margin-bottom:10px;">POST /api/business/:widgetId</p>
+    <div class="code-block" id="json-preview" style="max-height:400px;overflow-y:auto;font-size:12px;"></div>
+    <div style="margin-top:14px;display:flex;justify-content:flex-end;gap:8px;"><button onclick="copyJSON()" class="btn btn-light" style="font-size:13px;">Copy JSON</button><button onclick="document.getElementById('json-modal').classList.remove('open')" class="btn btn-dark" style="font-size:13px;">Close</button></div>
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script>
+// ═══ TOAST ═══════════════════════════════════════════
+function showToast(m,t='success'){
+  const c=document.querySelector('.toast-container');
+  const d=document.createElement('div');
+  d.className='toast';
+  const bg={'success':'#0d0d0d','error':'#dc2626','info':'#2563eb','warning':'#d97706'};
+  d.style.background=bg[t]||'#0d0d0d';
+  d.textContent=m;
+  c.appendChild(d);
+  setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity 0.3s';setTimeout(()=>d.remove(),300)},3000);
+}
+
+// ═══ AUTH ════════════════════════════════════════════
+function requireAuth(){
+  const u=localStorage.getItem('saleiq_user');
+  if(!u){window.location.href='login.html';return null;}
+  return JSON.parse(u);
+}
+function handleLogout(){if(confirm('Sign out?')){localStorage.removeItem('saleiq_user');window.location.href='login.html';}}
+
+// ═══ DATA ════════════════════════════════════════════
+let leads=[
+  {id:1,name:'Priya Sharma',email:'priya@techco.in',phone:'+91 98765 43210',message:'Interested in Pro plan',status:'converted',date:'2025-04-15'},
+  {id:2,name:'James Walker',email:'j.walker@growth.io',phone:'+1 415 555 0132',message:'Need AI agent for sales',status:'contacted',date:'2025-04-16'},
+  {id:3,name:'Fatima Al-Hassan',email:'fatima@venturex.com',phone:'+971 50 123 4567',message:'Enterprise evaluation',status:'new',date:'2025-04-17'},
+  {id:4,name:'Carlos Mejia',email:'cmejia@launchpad.mx',phone:'+52 55 1234 5678',message:'Wants demo first',status:'new',date:'2025-04-17'},
+  {id:5,name:'Yuki Tanaka',email:'yuki@bytegrowth.jp',phone:'+81 90 1234 5678',message:'Basic plan for startup',status:'contacted',date:'2025-04-18'},
+];
+let followups=[
+  {id:1,name:'Fatima Al-Hassan',date:'2025-04-18',status:'overdue',notes:'Send enterprise pricing deck'},
+  {id:2,name:'Carlos Mejia',date:'2025-04-19',status:'today',notes:'Schedule product demo'},
+  {id:3,name:'James Walker',date:'2025-04-20',status:'upcoming',notes:'Follow up on Pro trial'},
+  {id:4,name:'Priya Sharma',date:'2025-04-10',status:'done',notes:'Onboarding complete ✅'},
+];
+let products=[];
+let selectedColor='#10a37f';
+let currentBType='real_estate';
+
+// ═══ INIT ════════════════════════════════════════════
+const user=requireAuth();
+if(user){
+  // Stats
+  const used=user.wordsUsed||3420, limit=user.wordsLimit||10000;
+  const pct=Math.round(used/limit*100);
+  ['words-bar','bill-bar'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.width=pct+'%';});
+  document.getElementById('words-label').textContent=used.toLocaleString()+' / '+limit.toLocaleString();
+  document.getElementById('stat-words').textContent=used.toLocaleString();
+  document.getElementById('bill-words').textContent=used.toLocaleString()+' / '+limit.toLocaleString();
+  if(user.planExpiry){
+    const days=Math.max(0,Math.floor((new Date(user.planExpiry)-Date.now())/86400000));
+    document.getElementById('stat-expiry').textContent=days+' days';
+    document.getElementById('billing-expiry').textContent=new Date(user.planExpiry).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  }
+  document.getElementById('billing-plan-name').textContent=(user.plan||'Pro')+' Plan';
+  document.getElementById('billing-price').textContent=user.plan==='Basic'?'$49/month':'$79/month';
+
+  // Sidebar user
+  const su=document.getElementById('sidebar-user');
+  const name=user.name||'User';
+  su.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;"><div style="width:28px;height:28px;border-radius:50%;background:#f0f0f1;border:1px solid #e5e5e6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#374151;flex-shrink:0;">${name.charAt(0).toUpperCase()}</div><div style="overflow:hidden;"><p style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</p><p style="font-size:11px;color:#ababab;overflow:hidden;text-overflow:ellipsis;">${user.email||''}</p></div></div><button onclick="handleLogout()" style="width:100%;background:#f7f7f8;border:1px solid #e5e5e6;border-radius:6px;padding:6px;font-size:12px;font-weight:500;color:#6b6b6b;cursor:pointer;font-family:'Inter',sans-serif;" onmouseover="this.style.color='#dc2626';this.style.borderColor='#fecaca'" onmouseout="this.style.color='#6b6b6b';this.style.borderColor='#e5e5e6'">Sign out</button>`;
+
+  renderLeads();
+  renderFollowups();
+  renderRecentLeads();
+  addProduct(); // start with 1 product
+  loadSetup();
+}
+
+// ═══ SECTION SWITCH ══════════════════════════════════
+const pageTitles={overview:'Overview',leads:'Leads',followups:'Follow-Ups',widget:'Widget Settings',setup:'Business Setup',billing:'Billing'};
+function switchSection(id){
+  document.querySelectorAll('.section-view').forEach(el=>el.classList.remove('active'));
+  const t=document.getElementById('sec-'+id);
+  if(t)t.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(btn=>{btn.classList.toggle('active',btn.getAttribute('onclick')?.includes("'"+id+"'"));});
+  const pt=document.getElementById('page-title');
+  if(pt)pt.textContent=pageTitles[id]||id;
+}
+
+// ═══ BUSINESS TYPE ════════════════════════════════════
+function selectBType(type,el){
+  currentBType=type;
+  document.getElementById('biz-type').value=type;
+  document.querySelectorAll('.btype-card').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected');
+  renderDynamicFields(type);
+}
+
+function renderDynamicFields(type){
+  const container=document.getElementById('dynamic-fields');
+  let html='';
+
+  if(type==='real_estate'){
+    html=`<div class="card-section">
+      <div class="section-header"><div class="section-icon" style="background:#eff6ff;">🏠</div><div><p style="font-size:14px;font-weight:600;">Real Estate Details</p><p style="font-size:12px;color:#ababab;">Property-specific information for your AI agent</p></div></div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Property Types</label><div class="tags-wrap" id="tags-propertyTypes" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. 2BHK" onkeydown="addTag(event,'propertyTypes')"></div><p style="font-size:11px;color:#ababab;margin-top:4px;">Press Enter to add</p></div>
+        <div class="field"><label class="lbl">Locations</label><div class="tags-wrap" id="tags-locations" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. Baner, Wakad" onkeydown="addTag(event,'locations')"></div></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Price Range</label><input type="text" id="re-priceRange" class="inp" placeholder="₹45L - ₹1.5Cr"></div>
+        <div class="field"><label class="lbl">RERA Number</label><input type="text" id="re-rera" class="inp" placeholder="P52100012345"></div>
+      </div>
+      <div class="field"><label class="lbl">Amenities</label><div class="tags-wrap" id="tags-amenities" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. Swimming Pool" onkeydown="addTag(event,'amenities')"></div></div>
+    </div>`;
+  } else if(type==='restaurant'){
+    html=`<div class="card-section">
+      <div class="section-header"><div class="section-icon" style="background:#fff7ed;">🍽️</div><div><p style="font-size:14px;font-weight:600;">Menu Details</p><p style="font-size:12px;color:#ababab;">Menu items shown by your AI agent to visitors</p></div></div>
+      <div id="menu-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px;"></div>
+      <button type="button" onclick="addMenuItem()" style="width:100%;background:#f7f7f8;border:1.5px dashed #d0d0d0;border-radius:9px;padding:10px;font-size:13px;font-weight:500;color:#6b6b6b;cursor:pointer;font-family:'Inter',sans-serif;" onmouseover="this.style.borderColor='#10a37f';this.style.color='#10a37f'" onmouseout="this.style.borderColor='#d0d0d0';this.style.color='#6b6b6b'">+ Add Menu Item</button>
+    </div>`;
+  } else if(type==='fno'){
+    html=`<div class="card-section">
+      <div class="section-header"><div class="section-icon" style="background:#ecfdf5;">📈</div><div><p style="font-size:14px;font-weight:600;">F&O / Finance Details</p><p style="font-size:12px;color:#ababab;">Services and compliance info for your agent</p></div></div>
+      <div class="field"><label class="lbl">Services Offered</label><div class="tags-wrap" id="tags-fnoServices" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. Options Advisory" onkeydown="addTag(event,'fnoServices')"></div></div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Expected Returns</label><input type="text" id="fno-returns" class="inp" placeholder="15-25% monthly (past performance)"></div>
+        <div class="field"><label class="lbl">Minimum Capital</label><input type="text" id="fno-mincap" class="inp" placeholder="₹1 Lakh minimum"></div>
+      </div>
+      <div class="field"><label class="lbl">Risk Disclaimer *</label><textarea id="fno-disclaimer" class="inp" rows="2" style="resize:vertical;" placeholder="F&O trading involves risk. Past returns don't guarantee future results."></textarea><p style="font-size:11px;color:#d97706;margin-top:4px;">⚠️ Required by SEBI guidelines. Your agent will show this before any discussion.</p></div>
+      <div class="field"><label class="lbl">SEBI Registration / License</label><input type="text" id="fno-sebi" class="inp" placeholder="INH000012345"></div>
+    </div>`;
+  } else if(type==='ecommerce'){
+    html=`<div class="card-section">
+      <div class="section-header"><div class="section-icon" style="background:#fef2f2;">🛒</div><div><p style="font-size:14px;font-weight:600;">E-Commerce Details</p></div></div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Shipping Info</label><input type="text" id="ec-shipping" class="inp" placeholder="Free delivery above ₹499"></div>
+        <div class="field"><label class="lbl">Return Policy</label><input type="text" id="ec-returns" class="inp" placeholder="7-day easy returns"></div>
+      </div>
+      <div class="field"><label class="lbl">Categories</label><div class="tags-wrap" id="tags-ecCategories" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. Electronics, Fashion" onkeydown="addTag(event,'ecCategories')"></div></div>
+    </div>`;
+  } else if(type==='saas'){
+    html=`<div class="card-section">
+      <div class="section-header"><div class="section-icon" style="background:#eff6ff;">💻</div><div><p style="font-size:14px;font-weight:600;">SaaS Details</p></div></div>
+      <div class="grid2">
+        <div class="field"><label class="lbl">Free Trial</label><input type="text" id="saas-trial" class="inp" placeholder="14-day free trial"></div>
+        <div class="field"><label class="lbl">Integrations</label><div class="tags-wrap" id="tags-integrations" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. Slack, Zapier" onkeydown="addTag(event,'integrations')"></div></div>
+      </div>
+      <div class="field"><label class="lbl">Key Features</label><div class="tags-wrap" id="tags-features" onclick="this.querySelector('.tag-inp').focus()"><input class="tag-inp" placeholder="e.g. AI-powered, 24/7 support" onkeydown="addTag(event,'features')"></div></div>
+    </div>`;
+  }
+
+  container.innerHTML=html;
+  // init restaurant menu if needed
+  if(type==='restaurant') addMenuItem();
+}
+
+// ═══ TAGS INPUT ═══════════════════════════════════════
+const tagData={};
+function addTag(e,key){
+  if(e.key!=='Enter'&&e.key!==',')return;
+  e.preventDefault();
+  const inp=e.target;
+  const val=inp.value.trim().replace(',','');
+  if(!val)return;
+  if(!tagData[key])tagData[key]=[];
+  tagData[key].push(val);
+  const wrap=document.getElementById('tags-'+key);
+  const tag=document.createElement('div');
+  tag.className='tag';
+  tag.innerHTML=`${val}<span class="tag-x" onclick="removeTag(this,'${key}','${val}')">×</span>`;
+  wrap.insertBefore(tag,inp);
+  inp.value='';
+}
+function removeTag(el,key,val){
+  if(tagData[key])tagData[key]=tagData[key].filter(v=>v!==val);
+  el.parentElement.remove();
+}
+
+// ═══ PRODUCTS ══════════════════════════════════════════
+let prodCount=0;
+function addProduct(){
+  prodCount++;
+  const id=prodCount;
+  const list=document.getElementById('products-list');
+  const div=document.createElement('div');
+  div.className='prod-card';
+  div.id='prod-'+id;
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <p style="font-size:13px;font-weight:600;color:#374151;">Product / Service #${id}</p>
+      <button type="button" onclick="document.getElementById('prod-${id}').remove()" style="background:none;border:none;cursor:pointer;color:#ababab;font-size:18px;line-height:1;" onmouseover="this.style.color='#dc2626'" onmouseout="this.style.color='#ababab'">×</button>
+    </div>
+    <div class="grid2">
+      <div class="field"><label class="lbl">Name *</label><input type="text" id="p${id}-name" class="inp" placeholder="e.g. 2BHK Wakad" style="background:#fff;"></div>
+      <div class="field"><label class="lbl">Price</label><input type="text" id="p${id}-price" class="inp" placeholder="₹65L" style="background:#fff;"></div>
+    </div>
+    <div class="field"><label class="lbl">Description</label><input type="text" id="p${id}-desc" class="inp" placeholder="Ready to move, 850 sqft, 2 parking" style="background:#fff;"></div>
+    <div class="grid2">
+      <div class="field">
+        <label class="lbl">Image URL</label>
+        <input type="url" id="p${id}-img" class="inp" placeholder="https://yoursite.com/img/product.jpg" style="background:#fff;" oninput="previewProdImg(${id})">
+        <img id="p${id}-imgprev" style="display:none;" class="prod-img-preview">
+      </div>
+      <div class="field">
+        <label class="lbl">Badge</label>
+        <select id="p${id}-badge" class="inp" style="background:#fff;">
+          <option value="">None</option>
+          <option value="Bestseller">Bestseller</option>
+          <option value="New Launch">New Launch</option>
+          <option value="Hot Deal">Hot Deal</option>
+          <option value="Limited">Limited</option>
+          <option value="Sold Out">Sold Out</option>
+        </select>
+      </div>
+    </div>`;
+  list.appendChild(div);
+}
+
+function previewProdImg(id){
+  const url=document.getElementById('p'+id+'-img')?.value;
+  const img=document.getElementById('p'+id+'-imgprev');
+  if(!url||!img){if(img)img.style.display='none';return;}
+  img.src=url;
+  img.onload=()=>img.style.display='block';
+  img.onerror=()=>img.style.display='none';
+}
+
+// ═══ MENU ITEMS (Restaurant) ═══════════════════════════
+let menuCount=0;
+function addMenuItem(){
+  menuCount++;
+  const id=menuCount;
+  const list=document.getElementById('menu-list');
+  if(!list)return;
+  const div=document.createElement('div');
+  div.id='menu-'+id;
+  div.style.cssText='border:1px solid #e5e5e6;border-radius:9px;padding:13px;background:#fafafa;';
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <p style="font-size:13px;font-weight:600;color:#374151;">Menu Item #${id}</p>
+      <button type="button" onclick="document.getElementById('menu-${id}').remove()" style="background:none;border:none;cursor:pointer;color:#ababab;font-size:18px;">×</button>
+    </div>
+    <div class="grid3">
+      <div class="field"><label class="lbl">Category</label><input type="text" id="m${id}-cat" class="inp" placeholder="Starters" style="background:#fff;"></div>
+      <div class="field"><label class="lbl">Name *</label><input type="text" id="m${id}-name" class="inp" placeholder="Paneer Tikka" style="background:#fff;"></div>
+      <div class="field"><label class="lbl">Price</label><input type="text" id="m${id}-price" class="inp" placeholder="₹220" style="background:#fff;"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label class="lbl">Description</label><input type="text" id="m${id}-desc" class="inp" placeholder="Marinated in special spices" style="background:#fff;"></div>
+      <div class="field"><label class="lbl">Image URL</label><input type="url" id="m${id}-img" class="inp" placeholder="https://..." style="background:#fff;"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+      <input type="checkbox" id="m${id}-veg" style="accent-color:#10a37f;width:14px;height:14px;">
+      <label for="m${id}-veg" style="font-size:13px;color:#374151;cursor:pointer;">🟢 Veg item</label>
+    </div>`;
+  list.appendChild(div);
+}
+
+// ═══ COLLECT PAYLOAD ══════════════════════════════════
+function collectPayload(){
+  const btype=document.getElementById('biz-type').value;
+  const payload={
+    businessName:document.getElementById('biz-name')?.value||'',
+    businessType:btype,
+    tagline:document.getElementById('biz-tagline')?.value||'',
+    description:document.getElementById('biz-desc')?.value||'',
+    websiteUrl:document.getElementById('biz-website')?.value||'',
+    phone:document.getElementById('biz-phone')?.value||'',
+    workingHours:document.getElementById('biz-hours')?.value||'',
+    offers:document.getElementById('biz-offer')?.value||'',
+    ratings:document.getElementById('biz-ratings')?.value||'',
+    ctaGoal:document.getElementById('cta-goal')?.value||'lead',
+    ctaText:document.getElementById('cta-text')?.value||'',
+    topProducts:[],
+  };
+
+  // Collect products
+  document.querySelectorAll('[id^="prod-"]').forEach(card=>{
+    const n=card.id.split('-')[1];
+    const name=document.getElementById('p'+n+'-name')?.value;
+    if(name){
+      payload.topProducts.push({
+        name,
+        price:document.getElementById('p'+n+'-price')?.value||'',
+        description:document.getElementById('p'+n+'-desc')?.value||'',
+        imageUrl:document.getElementById('p'+n+'-img')?.value||'',
+        badge:document.getElementById('p'+n+'-badge')?.value||'',
+      });
+    }
+  });
+
+  // Dynamic fields
+  if(btype==='real_estate'){
+    payload.realEstateDetails={
+      propertyTypes:tagData['propertyTypes']||[],
+      locations:tagData['locations']||[],
+      priceRange:document.getElementById('re-priceRange')?.value||'',
+      amenities:tagData['amenities']||[],
+      reraNumber:document.getElementById('re-rera')?.value||'',
+    };
+  } else if(btype==='restaurant'){
+    payload.menuItems=[];
+    document.querySelectorAll('[id^="menu-"]').forEach(card=>{
+      const n=card.id.split('-')[1];
+      const name=document.getElementById('m'+n+'-name')?.value;
+      if(name) payload.menuItems.push({
+        category:document.getElementById('m'+n+'-cat')?.value||'',
+        name,price:document.getElementById('m'+n+'-price')?.value||'',
+        isVeg:document.getElementById('m'+n+'-veg')?.checked||false,
+        imageUrl:document.getElementById('m'+n+'-img')?.value||'',
+        description:document.getElementById('m'+n+'-desc')?.value||'',
+      });
+    });
+  } else if(btype==='fno'){
+    payload.fnoDetails={
+      services:tagData['fnoServices']||[],
+      returns:document.getElementById('fno-returns')?.value||'',
+      minCapital:document.getElementById('fno-mincap')?.value||'',
+      riskDisclaimer:document.getElementById('fno-disclaimer')?.value||'',
+      sebiRegistration:document.getElementById('fno-sebi')?.value||'',
+    };
+  } else if(btype==='ecommerce'){
+    payload.ecommerceDetails={
+      shipping:document.getElementById('ec-shipping')?.value||'',
+      returnPolicy:document.getElementById('ec-returns')?.value||'',
+      categories:tagData['ecCategories']||[],
+    };
+  } else if(btype==='saas'){
+    payload.saasDetails={
+      freeTrial:document.getElementById('saas-trial')?.value||'',
+      integrations:tagData['integrations']||[],
+      keyFeatures:tagData['features']||[],
+    };
+  }
+
+  return payload;
+}
+
+// ═══ SAVE / LOAD ══════════════════════════════════════
+function saveSetup(){
+  const payload=collectPayload();
+  if(!payload.businessName){showToast('Business name is required','error');return;}
+  localStorage.setItem('saleiq_setup',JSON.stringify(payload));
+
+  // Simulate API call
+  const status=document.getElementById('api-status');
+  const statusText=document.getElementById('api-status-text');
+  status.style.display='flex';
+  statusText.textContent='✓ Saved! POST /api/business/:widgetId → 200 OK';
+  showToast('Business setup saved & agent training started!','success');
+  setTimeout(()=>status.style.display='none',5000);
+}
+
+function loadSetup(){
+  const saved=localStorage.getItem('saleiq_setup');
+  if(!saved)return;
+  try{
+    const d=JSON.parse(saved);
+    const set=(id,val)=>{const el=document.getElementById(id);if(el&&val)el.value=val;};
+    set('biz-name',d.businessName);
+    set('biz-tagline',d.tagline);
+    set('biz-desc',d.description);
+    set('biz-website',d.websiteUrl);
+    set('biz-phone',d.phone);
+    set('biz-hours',d.workingHours);
+    set('biz-offer',d.offers);
+    set('biz-ratings',d.ratings);
+    set('cta-goal',d.ctaGoal);
+    set('cta-text',d.ctaText);
+    if(d.businessType){
+      const card=document.querySelector(`.btype-card[onclick*="'${d.businessType}'"]`);
+      if(card){selectBType(d.businessType,card);}
+    }
+  }catch(e){}
+}
+
+function previewPayload(){
+  const payload=collectPayload();
+  document.getElementById('json-preview').textContent=JSON.stringify(payload,null,2);
+  document.getElementById('json-modal').classList.add('open');
+}
+
+function copyJSON(){
+  const text=document.getElementById('json-preview').textContent;
+  navigator.clipboard.writeText(text).then(()=>showToast('JSON copied!','success'));
+}
+
+// ═══ LEADS ═══════════════════════════════════════════
+function fmtDate(s){if(!s)return'—';return new Date(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+function renderLeads(){
+  const tbody=document.getElementById('leads-table');if(!tbody)return;
+  const search=(document.getElementById('lead-search')?.value||'').toLowerCase();
+  const sf=document.getElementById('status-filter')?.value||'';
+  const filtered=leads.filter(l=>(!search||l.name.toLowerCase().includes(search)||l.email.toLowerCase().includes(search))&&(!sf||l.status===sf));
+  tbody.innerHTML=filtered.length===0?`<tr><td colspan="7" style="text-align:center;padding:40px;color:#ababab;">No leads found</td></tr>`
+    :filtered.map(l=>{
+      const b=l.status==='new'?'badge-blue':l.status==='contacted'?'badge-yellow':'badge-green';
+      return`<tr><td><div style="display:flex;align-items:center;gap:8px;"><div style="width:27px;height:27px;border-radius:50%;background:#f0f0f1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0;">${l.name.charAt(0)}</div><span style="font-weight:500;">${l.name}</span></div></td><td style="color:#6b6b6b;font-size:13px;">${l.email}</td><td style="color:#6b6b6b;font-size:13px;">${l.phone}</td><td style="font-size:13px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#6b6b6b;">${l.message}</td><td><span class="badge ${b}">${l.status}</span></td><td style="font-size:13px;color:#ababab;">${fmtDate(l.date)}</td><td><div style="display:flex;gap:5px;"><button onclick="deleteLead(${l.id})" style="font-size:11px;background:#fef2f2;border:1px solid #fecaca;border-radius:5px;padding:4px 8px;cursor:pointer;color:#dc2626;font-family:'Inter',sans-serif;">Delete</button></div></td></tr>`;
+    }).join('');
+  document.getElementById('stat-leads').textContent=leads.length;
+}
+function renderRecentLeads(){
+  const t=document.getElementById('recent-leads-table');if(!t)return;
+  t.innerHTML=leads.slice(0,5).map(l=>{const b=l.status==='new'?'badge-blue':l.status==='contacted'?'badge-yellow':'badge-green';return`<tr><td><div style="display:flex;align-items:center;gap:7px;"><div style="width:25px;height:25px;border-radius:50%;background:#f0f0f1;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;">${l.name.charAt(0)}</div><span style="font-size:13px;font-weight:500;">${l.name}</span></div></td><td style="font-size:12px;color:#ababab;">${l.email}</td><td><span class="badge ${b}" style="font-size:11px;">${l.status}</span></td><td style="font-size:12px;color:#ababab;">${fmtDate(l.date)}</td></tr>`;}).join('');
+}
+function deleteLead(id){if(!confirm('Delete?'))return;leads=leads.filter(l=>l.id!==id);renderLeads();renderRecentLeads();showToast('Deleted');}
+function addLead(e){e.preventDefault();leads.unshift({id:Date.now(),name:document.getElementById('new-name').value.trim(),email:document.getElementById('new-email').value.trim(),phone:document.getElementById('new-phone').value.trim()||'—',message:document.getElementById('new-message').value.trim()||'—',status:'new',date:new Date().toISOString().split('T')[0]});document.getElementById('add-lead-modal').classList.remove('open');renderLeads();renderRecentLeads();showToast('Lead added!');e.target.reset();}
+function exportLeads(){const rows=[['Name','Email','Phone','Message','Status','Date']];leads.forEach(l=>rows.push([l.name,l.email,l.phone,l.message,l.status,l.date]));const csv=rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='saleiq-leads.csv';a.click();showToast('Exported!');}
+
+// ═══ FOLLOW-UPS ══════════════════════════════════════
+function renderFollowups(){
+  const c=document.getElementById('followups-list');if(!c)return;
+  const grp={overdue:followups.filter(f=>f.status==='overdue'),today:followups.filter(f=>f.status==='today'),upcoming:followups.filter(f=>f.status==='upcoming'),done:followups.filter(f=>f.status==='done')};
+  document.getElementById('fu-overdue').textContent=grp.overdue.length;
+  document.getElementById('fu-today').textContent=grp.today.length;
+  document.getElementById('fu-done').textContent=grp.done.length;
+  const render=(title,items,color)=>{if(!items.length)return'';return`<div style="margin-bottom:18px;"><p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:${color};margin-bottom:9px;">${title} (${items.length})</p><div style="display:flex;flex-direction:column;gap:7px;">${items.map(f=>`<div class="fu-card" style="border-left-color:${color};"><div><p style="font-size:14px;font-weight:500;margin-bottom:2px;">${f.name}</p><p style="font-size:12.5px;color:#6b6b6b;">${f.notes}</p><p style="font-size:11px;color:#ababab;margin-top:3px;">📅 ${fmtDate(f.date)}</p></div><div style="display:flex;gap:5px;">${f.status!=='done'?`<button onclick="markDone(${f.id})" style="font-size:12px;background:#ecfdf5;border:1px solid #d1fae5;border-radius:6px;padding:5px 9px;cursor:pointer;color:#059669;font-family:'Inter',sans-serif;">✓ Done</button>`:''}<button onclick="delFU(${f.id})" style="font-size:12px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:5px 9px;cursor:pointer;color:#dc2626;font-family:'Inter',sans-serif;">Delete</button></div></div>`).join('')}</div></div>`;};
+  c.innerHTML=render('🔴 Overdue',grp.overdue,'#dc2626')+render('🟡 Today',grp.today,'#d97706')+render('🔵 Upcoming',grp.upcoming,'#2563eb')+render('✅ Done',grp.done,'#059669')||`<div style="text-align:center;padding:48px;color:#ababab;">No follow-ups yet.</div>`;
+}
+function addFollowup(e){e.preventDefault();const date=document.getElementById('fu-date').value;const today=new Date().toISOString().split('T')[0];const status=date<today?'overdue':date===today?'today':'upcoming';followups.unshift({id:Date.now(),name:document.getElementById('fu-name').value.trim(),date,notes:document.getElementById('fu-notes').value.trim()||'Follow up',status});document.getElementById('add-followup-modal').classList.remove('open');renderFollowups();showToast('Reminder added!');e.target.reset();}
+function markDone(id){const f=followups.find(x=>x.id===id);if(f){f.status='done';renderFollowups();showToast('Done!');}}
+function delFU(id){followups=followups.filter(f=>f.id!==id);renderFollowups();showToast('Deleted');}
+
+// ═══ WIDGET ═══════════════════════════════════════════
+function selectColor(c,el){selectedColor=c;document.querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('active'));if(el)el.classList.add('active');const pb=document.getElementById('prev-btn');if(pb)pb.style.background=c;updatePreview();}
+function updatePreview(){const name=document.getElementById('agent-name')?.value||'Alex';const greeting=document.getElementById('agent-greeting')?.value||'Hi!';const pn=document.getElementById('prev-name');if(pn)pn.textContent=name;const pg=document.getElementById('prev-greeting');if(pg)pg.textContent=greeting;const ec=document.getElementById('embed-code');if(ec)ec.textContent=`<script src="https://cdn.saleiq.app/widget.js" data-key="sk_live_YOUR_KEY" data-agent="${name}" data-color="${selectedColor}"><\/script>`;}
+function copyEmbedCode(){navigator.clipboard.writeText(document.getElementById('embed-code')?.textContent||'').then(()=>showToast('Copied!'));}
+
+// ═══ MODAL CLOSE ══════════════════════════════════════
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');});
+
+// Init dynamic fields
+renderDynamicFields('real_estate');
+</script>
+<!-- Firebase Auth + Payment -->
+<script type="module" src="assets/js/auth.js"></script>
+<script type="module" src="assets/js/payment.js"></script>
+</body>
+</html>
