@@ -1,7 +1,7 @@
 import Link from 'next/link'
 export default function Page() {
   const titles: Record<string,string> = { privacy:'Privacy Policy', refund:'Refund Policy', terms:'Terms & Conditions', support:'Support' }
-  const slug = 'privacy'
+  const slug: string = 'privacy'
   return (
     <div className="min-h-screen bg-white">
       <nav className="border-b border-gray-100 px-8 py-4 flex items-center justify-between">
