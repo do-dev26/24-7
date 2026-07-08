@@ -1,4 +1,4 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://24-7-hyaq.vercel.app/'
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://saleiq-1.onrender.com/api'
 
 export const firebaseConfig = {   // ← add "export" here
   apiKey: "AIzaSyCUeIklxbz6dq1vRdOveeZZl-9tdIhKuB4",
