@@ -1,13 +1,13 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://24-7-hyaq.vercel.app/'
 
-export const firebaseConfig = {
-  apiKey: "AIzaSyBKvn0N0hUzic1EWTJ0U9x9DO39bvEc4dc",
-  authDomain: "wsetw-7302c.firebaseapp.com",
-  projectId: "wsetw-7302c",
-  storageBucket: "wsetw-7302c.firebasestorage.app",
-  messagingSenderId: "916747800024",
-  appId: "1:916747800024:web:8b2baeb5b64194859276ad",
-  measurementId: "G-4MGLCB6L2B"
+const firebaseConfig = {
+  apiKey: "AIzaSyCUeIklxbz6dq1vRdOveeZZl-9tdIhKuB4",
+  authDomain: "testora-98f88.firebaseapp.com",
+  projectId: "testora-98f88",
+  storageBucket: "testora-98f88.firebasestorage.app",
+  messagingSenderId: "243615465573",
+  appId: "1:243615465573:web:04af838f19fdf26140468c",
+  measurementId: "G-GG8LBD8HBB"
 };
 
 export const PLANS = {
