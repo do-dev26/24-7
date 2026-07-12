@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth-context'
+import { PLANS } from '@/lib/config'
 
 const NAV = [
   { href: '/dashboard',           label: 'Overview',       icon: 'M3 3h7v7H3zm11 0h7v7h-7zM3 14h7v7H3zm11 0h7v7h-7z' },
@@ -21,7 +22,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
-  }, [user, loading])
+  }, [user, loading, router])
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -33,8 +34,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   )
   if (!user) return null
 
+  // Fix #1: Use actual plan word limit, not hardcoded 500
+  const planCfg = PLANS[(user.plan as keyof typeof PLANS)] || PLANS.free
+  const planPct = Math.min(100, Math.round(((user.wordsUsed || 0) / planCfg.words) * 100))
   const initials = (user.displayName || user.email || 'U').split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()
-  const planPct  = Math.min(100, Math.round(((user.wordsUsed || 0) / 500) * 100))
 
   return (
     <div className="flex min-h-screen bg-[#f7f7f8]">
@@ -66,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           })}
         </nav>
 
-        {/* Usage bar */}
+        {/* Usage bar — Fix #1: correct plan words */}
         <div className="mx-3 mb-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
           <div className="flex justify-between text-xs text-gray-400 mb-1.5">
             <span>Words used</span>
@@ -76,7 +79,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className={`h-full rounded-full transition-all ${planPct > 80 ? 'bg-red-400' : planPct > 60 ? 'bg-amber-400' : 'bg-brand'}`}
               style={{ width: `${planPct}%` }} />
           </div>
-          <div className="text-xs text-gray-400 mt-1.5 capitalize">{user.plan || 'free'} plan</div>
+          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+            <span className="capitalize">{planCfg.label} plan</span>
+            <span>{(user.wordsUsed || 0).toLocaleString()} / {planCfg.words === 999999 ? '∞' : planCfg.words.toLocaleString()}</span>
+          </div>
         </div>
 
         {/* User row */}
