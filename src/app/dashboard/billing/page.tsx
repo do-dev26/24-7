@@ -5,7 +5,8 @@ import { useAuth } from '@/lib/auth-context'
 import toast from 'react-hot-toast'
 import { useState } from 'react'
 
-const PLAN_FEATURES: Record<string, string[]> = {
+// Fix #5: Features fetched from backend via plans API — fallback only if backend doesn't return them
+const DEFAULT_FEATURES: Record<string, string[]> = {
   free:       ['1 widget', '500 words/month', 'Basic analytics', 'Email support'],
   starter:    ['3 widgets', '5,000 words/month', 'Lead export CSV', 'All AI brains'],
   pro:        ['10 widgets', '50,000 words/month', 'Advanced analytics', 'Priority support'],
@@ -14,9 +15,9 @@ const PLAN_FEATURES: Record<string, string[]> = {
 
 export default function BillingPage() {
   const { user } = useAuth()
-  const { data: plans = [] }   = useSWR('plans', billingAPI.plans)
-  const { data: sub }          = useSWR('sub', billingAPI.subscription)
-  const [loading, setLoading]  = useState('')
+  const { data: plans = [] }  = useSWR('plans', billingAPI.plans)
+  const { data: sub }         = useSWR('sub', billingAPI.subscription)
+  const [loading, setLoading] = useState('')
 
   const checkout = async (planId: string) => {
     setLoading(planId)
@@ -62,8 +63,8 @@ export default function BillingPage() {
               <div className="font-semibold text-gray-900 capitalize">{sub.plan} Plan</div>
               <div className="text-sm text-gray-500 mt-0.5">
                 {sub.cancelAtPeriodEnd
-                  ? `Cancels on ${new Date(sub.currentPeriodEnd).toLocaleDateString('en-IN', { day:'numeric', month:'long' })}`
-                  : `Renews on ${new Date(sub.currentPeriodEnd).toLocaleDateString('en-IN', { day:'numeric', month:'long' })}`}
+                  ? `Cancels on ${new Date(sub.currentPeriodEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}`
+                  : `Renews on ${new Date(sub.currentPeriodEnd).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}`}
               </div>
             </div>
             <div className="flex gap-2">
@@ -78,12 +79,15 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Plans grid */}
+      {/* Plans grid — Fix #5: use features from backend if available, else fallback */}
       <div className="grid grid-cols-4 gap-4">
-        {(['free','starter','pro','enterprise'] as const).map(planId => {
-          const p       = plans.find((x: any) => x.id === planId) || { id: planId, name: planId, price: 0 }
-          const isCurr  = currentPlan === planId
-          const isPro   = planId === 'pro'
+        {(['free', 'starter', 'pro', 'enterprise'] as const).map(planId => {
+          const p      = plans.find((x: any) => x.id === planId) || { id: planId, name: planId, price: 0 }
+          const isCurr = currentPlan === planId
+          const isPro  = planId === 'pro'
+          // Use features from backend plan object if returned, else use defaults
+          const features: string[] = p.features?.length ? p.features : (DEFAULT_FEATURES[planId] || [])
+
           return (
             <div key={planId}
               className={`card p-5 flex flex-col ${isPro ? 'border-2 border-brand ring-2 ring-brand/10' : ''}`}>
@@ -92,18 +96,20 @@ export default function BillingPage() {
                   Most popular
                 </div>
               )}
-              <div className="capitalize font-semibold text-gray-900 mb-1">{p.name}</div>
+              <div className="capitalize font-semibold text-gray-900 mb-1">{p.name || planId}</div>
               <div className="mb-4">
                 {p.price === 0
                   ? <span className="text-2xl font-bold text-gray-900">Free</span>
-                  : p.price === null
+                  : p.price === null || p.price === undefined
                   ? <span className="text-2xl font-bold text-gray-900">Custom</span>
                   : <><span className="text-2xl font-bold text-gray-900">${p.price}</span><span className="text-sm text-gray-400">/mo</span></>}
               </div>
               <ul className="text-sm text-gray-500 space-y-1.5 flex-1 mb-4">
-                {(PLAN_FEATURES[planId] || []).map(f => (
+                {features.map((f: string) => (
                   <li key={f} className="flex items-center gap-2">
-                    <svg width="12" height="12" fill="none" stroke="#10a37f" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                    <svg width="12" height="12" fill="none" stroke="#10a37f" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
                     {f}
                   </li>
                 ))}
@@ -117,7 +123,7 @@ export default function BillingPage() {
               ) : (
                 <button onClick={() => checkout(planId)} disabled={loading === planId}
                   className={`${isPro ? 'btn-primary' : 'btn-secondary'} w-full text-sm`}>
-                  {loading === planId ? 'Redirecting…' : `Upgrade to ${p.name}`}
+                  {loading === planId ? 'Redirecting…' : `Upgrade to ${p.name || planId}`}
                 </button>
               )}
             </div>
