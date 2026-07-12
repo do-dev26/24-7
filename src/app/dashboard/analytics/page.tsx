@@ -15,14 +15,18 @@ function Metric({ label, value, sub }: any) {
 }
 
 export default function AnalyticsPage() {
-  const [days, setDays]           = useState(30)
-  const [selectedWidget, setWid]  = useState('')
-  const { data: summary }         = useSWR(['summary', days], analyticsAPI.summary)
-  const { data: convos }          = useSWR(['convos', days], () => analyticsAPI.conversations(days))
-  const { data: leadAnalytics }   = useSWR('leadAnalytics', analyticsAPI.leads)
-  const { data: widgets = [] }    = useSWR('widgets', widgetAPI.list)
-  const { data: wAnalytics }      = useSWR(selectedWidget ? ['wana', selectedWidget, days] : null,
-    () => analyticsAPI.widget(selectedWidget, days))
+  const [days, setDays]          = useState(30)
+  const [selectedWidget, setWid] = useState('')
+
+  // Fix #4: summary does not accept days — remove days from SWR key so it doesn't refetch unnecessarily
+  const { data: summary }       = useSWR('summary', analyticsAPI.summary)
+  const { data: convos }        = useSWR(['convos', days], () => analyticsAPI.conversations(days))
+  const { data: leadAnalytics } = useSWR('leadAnalytics', analyticsAPI.leads)
+  const { data: widgets = [] }  = useSWR('widgets', widgetAPI.list)
+  const { data: wAnalytics }    = useSWR(
+    selectedWidget ? ['wana', selectedWidget, days] : null,
+    () => analyticsAPI.widget(selectedWidget, days)
+  )
 
   return (
     <div>
@@ -40,10 +44,10 @@ export default function AnalyticsPage() {
 
       {/* Overview */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        <Metric label="Total Chats"       value={summary?.totalChats}         sub="all widgets" />
-        <Metric label="Total Leads"       value={summary?.totalLeads}         sub="captured by AI" />
-        <Metric label="Unique Sessions"   value={convos?.uniqueSessions}      sub={`last ${days} days`} />
-        <Metric label="Avg Words/Chat"    value={convos?.avgWordsPerChat}     sub="per conversation" />
+        <Metric label="Total Chats"     value={summary?.totalChats}     sub="all widgets" />
+        <Metric label="Total Leads"     value={summary?.totalLeads}     sub="captured by AI" />
+        <Metric label="Unique Sessions" value={convos?.uniqueSessions}  sub={`last ${days} days`} />
+        <Metric label="Avg Words/Chat"  value={convos?.avgWordsPerChat} sub="per conversation" />
       </div>
 
       {/* Conversation stats */}
@@ -117,7 +121,7 @@ export default function AnalyticsPage() {
             </div>
             {Object.keys(wAnalytics.dailyBreakdown || {}).length > 0 && (
               <div>
-                <div className="text-xs text-gray-400 mb-2">Daily chats</div>
+                <div className="text-xs text-gray-400 mb-2">Daily chats (last 14 days)</div>
                 <div className="flex items-end gap-1 h-20">
                   {Object.entries(wAnalytics.dailyBreakdown).slice(-14).map(([day, count]: any) => {
                     const max = Math.max(...Object.values(wAnalytics.dailyBreakdown) as number[]) || 1
