@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { onAuthStateChanged, User as FBUser } from 'firebase/auth'
 import { auth } from './firebase'
 import { authAPI } from './api'
+import api from './api'
 
 interface AppUser {
   uid: string; email: string; displayName: string
@@ -18,10 +19,10 @@ interface AuthCtx {
 const Ctx = createContext<AuthCtx>({} as AuthCtx)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser]     = useState<AppUser | null>(null)
-  const [fbUser, setFbUser] = useState<FBUser | null>(null)
+  const [user, setUser]       = useState<AppUser | null>(null)
+  const [fbUser, setFbUser]   = useState<FBUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const [token, setToken]   = useState('')
+  const [token, setToken]     = useState('')
 
   const setTokens = (access: string, refresh: string) => {
     localStorage.setItem('access_token', access)
@@ -29,11 +30,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(access)
   }
 
-  const logout = () => {
-    auth.signOut()
-    localStorage.clear()
-    setUser(null); setFbUser(null); setToken('')
-    window.location.href = '/login'
+  // Fix #6: Call backend /auth/logout to invalidate refresh token
+  const logout = async () => {
+    try {
+      const refresh = localStorage.getItem('refresh_token')
+      if (refresh) {
+        await api.post('/auth/logout', { token: refresh }).catch(() => {})
+      }
+    } finally {
+      auth.signOut()
+      localStorage.clear()
+      setUser(null); setFbUser(null); setToken('')
+      window.location.href = '/login'
+    }
   }
 
   const refreshUser = async () => {
@@ -51,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setFbUser(fbU)
       if (!fbU) { setUser(null); setLoading(false); return }
       try {
+        // Fix #2: Only call authAPI.me() once — single endpoint
         const u = await authAPI.me()
         setUser(u)
       } catch {}
