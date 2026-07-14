@@ -86,6 +86,15 @@ export const billingAPI = {
   cancel:      ()           => api.post('/billing/subscription/cancel').then(r => r.data),
 }
 
+export const chatAPI = {
+  // GET sessions list for a widget (grouped by sessionId)
+  sessions: (widgetId: string) =>
+    api.get(`/analytics/sessions?widgetId=${widgetId}&days=90`).then(r => r.data.data?.sessions || []),
+  // GET full turn-by-turn history for one session
+  history:  (widgetId: string, sessionId: string) =>
+    api.get(`/chat/${widgetId}/history/${sessionId}`).then(r => r.data.data),
+}
+
 export const userAPI = {
   me:         ()        => api.get('/users/me').then(r => r.data.data),
   update:     (d: any)  => api.put('/users/me', d).then(r => r.data.data),
